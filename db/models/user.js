@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const { Sequelize } = require(".");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
@@ -77,6 +78,9 @@ module.exports = (sequelize, DataTypes) => {
             msg: "Please enter your username",
           },
         },
+      },
+      refreshToken: {
+        type: DataTypes.STRING,
       },
       address: {
         type: DataTypes.STRING,
