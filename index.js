@@ -12,9 +12,11 @@ const corsOptions = {
 
 // Import routers
 const UsersRouter = require("./routers/usersRouter");
+const AuthRouter = require("./routers/authRouter");
 
 // Import controllers
 const UsersController = require("./controllers/usersController");
+const AuthController = require("./controllers/authController");
 
 // Import db
 const db = require("./db/models/index");
@@ -22,9 +24,11 @@ const { user } = db;
 
 // Initialise controllers
 const usersController = new UsersController(user);
+const authController = new AuthController(user);
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController).routes();
+const authRouter = new AuthRouter(authController).routes();
 
 // Enable CORS
 app.use(cors(corsOptions));
@@ -35,6 +39,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Use routers
 app.use("/users", usersRouter);
+app.use("/auth", authRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
