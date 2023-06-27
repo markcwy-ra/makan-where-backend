@@ -10,6 +10,9 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
+// Import middlewares
+const verifyToken = require("./middlewares/verifyToken");
+
 // Import routers
 const UsersRouter = require("./routers/usersRouter");
 const AuthRouter = require("./routers/authRouter");
@@ -20,15 +23,19 @@ const AuthController = require("./controllers/authController");
 
 // Import db
 const db = require("./db/models/index");
-const { user } = db;
+const { user, refreshtoken, passwordresettoken } = db;
 
 // Initialise controllers
 const usersController = new UsersController(user);
-const authController = new AuthController(user);
+const authController = new AuthController(
+  user,
+  refreshtoken,
+  passwordresettoken
+);
 
 // Initialise routers
-const usersRouter = new UsersRouter(usersController).routes();
-const authRouter = new AuthRouter(authController).routes();
+const usersRouter = new UsersRouter(usersController, verifyToken).routes();
+const authRouter = new AuthRouter(authController, verifyToken).routes();
 
 // Enable CORS
 app.use(cors(corsOptions));
