@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       restaurantId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "restaurant_id",
         references: {
           model: "restaurant",
           key: "id",
@@ -19,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       day: {
         allowNull: false,
         type: DataTypes.STRING,
+        field: "day",
         validate: {
           isIn: [
             [
@@ -38,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       openingTime: {
         type: DataTypes.TIME,
+        field: "opening_time",
         validate: {
           isAfterClosing(value) {
             if (this.closingTime && value >= this.closingTime) {
@@ -48,6 +51,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       closingTime: {
         type: DataTypes.TIME,
+        field: "closing_time",
         validate: {
           isBeforeOpening(value) {
             if (this.openingTime && value <= this.openingTime) {

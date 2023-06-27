@@ -18,6 +18,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
+      place_id: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       location_id: {
         allowNull: false,
         type: Sequelize.INTEGER,
@@ -43,6 +47,14 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: {
           model: "price_ranges",
+          key: "id",
+        },
+      },
+      status_id: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: "restaurant_status",
           key: "id",
         },
       },

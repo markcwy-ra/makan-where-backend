@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
+        field: "price_range",
         validate: {
           isIn: [["$", "$$", "$$$", "$$$$"]],
         },

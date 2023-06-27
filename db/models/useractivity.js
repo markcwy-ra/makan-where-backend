@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "user_id",
         references: {
           model: "user",
           key: "id",
@@ -19,14 +20,17 @@ module.exports = (sequelize, DataTypes) => {
       activityType: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "activity_type",
       },
       targetId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "target_id",
       },
       targetType: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "target_type",
       },
     },
     {

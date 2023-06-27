@@ -13,20 +13,25 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "name",
       },
       city: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "city",
       },
       state: {
         type: DataTypes.STRING,
+        field: "state",
       },
       country: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "country",
       },
       latitude: {
         type: DataTypes.DOUBLE,
+        field: "latitude",
         validate: {
           min: -90,
           max: 90,
@@ -34,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       longitude: {
         type: DataTypes.DOUBLE,
+        field: "longitude",
         validate: {
           min: -180,
           max: 180,

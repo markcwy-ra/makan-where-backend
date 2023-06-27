@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
+        field: "preference",
         validate: {
           isIn: [["Vegan", "Vegetarian", "Gluten-free", "Halal"]],
         },
