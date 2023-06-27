@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "user_id",
         references: {
           model: "user",
           key: "id",
@@ -25,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       restaurantId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "restaurant_id",
         references: {
           model: "restaurant",
           key: "id",
@@ -33,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
       rating: {
         allowNull: false,
         type: DataTypes.INTEGER,
+        field: "rating",
         validate: {
           min: 1,
           max: 5,
@@ -41,19 +44,23 @@ module.exports = (sequelize, DataTypes) => {
       title: {
         allowNull: false,
         type: DataTypes.STRING,
+        field: "title",
       },
       body: {
         allowNull: false,
         type: DataTypes.TEXT,
+        field: "body",
       },
       photoUrl: {
         type: DataTypes.STRING,
+        field: "photo_url",
         validate: {
           isUrl: true,
         },
       },
       recommendedDishes: {
         type: DataTypes.TEXT,
+        field: "recommended_dishes",
       },
     },
     {

@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "user_id",
         references: {
           model: "user",
           key: "id",
@@ -29,14 +30,17 @@ module.exports = (sequelize, DataTypes) => {
       title: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "title",
       },
       description: {
         type: DataTypes.TEXT,
         allowNull: false,
+        field: "description",
       },
       locationId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "location_id",
         references: {
           model: "location",
           key: "id",
@@ -45,6 +49,7 @@ module.exports = (sequelize, DataTypes) => {
       photoUrl: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "photo_url",
         validate: {
           isUrl: true,
         },

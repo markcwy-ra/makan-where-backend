@@ -9,14 +9,17 @@ module.exports = (sequelize, DataTypes) => {
       targetId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "target_id",
       },
       targetType: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "target_type",
       },
       score: {
         type: DataTypes.FLOAT,
         allowNull: false,
+        field: "score",
         defaultValue: 0.0,
         validate: {
           min: 0,
@@ -26,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       userActivityCount: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "user_activity_count",
       },
     },
     {

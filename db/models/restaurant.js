@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.openinghour, { foreignKey: "restaurant_id" });
 
       this.belongsTo(models.pricerange, { foreignKey: "price_range_id" });
+      this.belongsTo(models.restaurantstatus, { foreignKey: "status_id" });
       this.belongsTo(models.location, { foreignKey: "location_id" });
 
       this.belongsToMany(models.makanlist, {
@@ -25,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
         through: "restaurant_upvotes",
         foreignKey: "restaurant_id",
       });
+      this.belongsToMany(models.mealtype, {
+        through: "restaurant_meal_types",
+        foreignKey: "restaurant_id",
+      });
     }
   }
   Restaurant.init(
@@ -32,13 +37,16 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "name",
       },
       address: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "address",
       },
       locationId: {
         type: DataTypes.INTEGER,
+        field: "location_id",
         references: {
           model: "location",
           key: "id",
@@ -46,21 +54,25 @@ module.exports = (sequelize, DataTypes) => {
       },
       description: {
         type: DataTypes.TEXT,
+        field: "description",
       },
       photoUrl: {
         type: DataTypes.STRING,
+        field: "photo_url",
         validate: {
           isUrl: true,
         },
       },
       googleMapsUrl: {
         type: DataTypes.STRING,
+        field: "google_maps_url",
         validate: {
           isUrl: true,
         },
       },
       averageRating: {
         type: DataTypes.FLOAT,
+        field: "average_rating",
         validate: {
           min: 0,
           max: 5,
@@ -69,12 +81,26 @@ module.exports = (sequelize, DataTypes) => {
       priceRangeId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "price_range_id",
         references: {
           model: "pricerange",
           key: "id",
         },
         validate: {
           max: 4,
+          min: 1,
+        },
+      },
+      statusId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: "status_id",
+        references: {
+          model: "restaurantstatus",
+          key: "id",
+        },
+        validate: {
+          max: 3,
           min: 1,
         },
       },
