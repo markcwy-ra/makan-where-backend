@@ -24,14 +24,10 @@ module.exports = {
         unique: true,
         type: Sequelize.STRING,
       },
-      refresh_token: {
-        type: Sequelize.STRING,
-      },
       address: {
         type: Sequelize.STRING,
       },
       location_id: {
-        allowNull: false,
         type: Sequelize.INTEGER,
         references: {
           model: "locations",
@@ -50,6 +46,9 @@ module.exports = {
       },
       updated_at: {
         allowNull: false,
+        type: Sequelize.DATE,
+      },
+      deleted_at: {
         type: Sequelize.DATE,
       },
     });
