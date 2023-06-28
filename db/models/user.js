@@ -86,10 +86,6 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      address: {
-        type: DataTypes.STRING,
-        field: "address",
-      },
       locationId: {
         type: DataTypes.INTEGER,
         field: "location_id",
