@@ -26,7 +26,7 @@ const db = require("./db/models/index");
 const { user, refreshtoken, passwordresettoken } = db;
 
 // Initialise controllers
-const usersController = new UsersController(user);
+const usersController = new UsersController(user, refreshtoken);
 const authController = new AuthController(
   user,
   refreshtoken,
