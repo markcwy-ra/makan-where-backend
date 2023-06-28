@@ -89,6 +89,7 @@ class UsersController extends BaseController {
         success: true,
         msg: `User ${updatedUser.username} successfully updated profile`,
         data: updatedUser,
+
       });
     } catch (err) {
       console.log("Error updating user profile:", err);
