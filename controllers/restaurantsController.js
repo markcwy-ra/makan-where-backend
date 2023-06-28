@@ -6,17 +6,17 @@ class RestaurantsController extends BaseController {
   constructor(
     model,
     locationModel,
-    mealTypeModel,
     openingHourModel,
     priceRangeModel,
-    restaurantStatusModel
+    restaurantStatusModel,
+    userModel
   ) {
     super(model);
     this.locationModel = locationModel;
-    this.mealTypeModel = mealTypeModel;
     this.openingHourModel = openingHourModel;
     this.priceRangeModel = priceRangeModel;
     this.restaurantStatusModel = restaurantStatusModel;
+    this.userModel = userModel;
   }
 
   // Get restaurants from search
@@ -83,13 +83,120 @@ class RestaurantsController extends BaseController {
     });
   };
 
-  // Update restaurant info
-
   // Upvote restaurant
+  upvoteRestaurant = async (req, res) => {
+    const { restaurantId } = req.params;
+    const { userId } = req.body;
 
-  // Count upvotes for restaurant
+    try {
+      const user = await this.userModel.findByPk(userId);
+      const restaurant = await this.model.findByPk(restaurantId);
+
+      if (user && restaurant) {
+        await user.addUpvotedRestaurants(restaurant);
+        return res.json({
+          success: true,
+          msg: "Successfully upvoted restaurant",
+        });
+      } else {
+        return res
+          .status(404)
+          .json({ error: true, msg: "User or restaurant not found" });
+      }
+    } catch (err) {
+      console.log("Error adding upvote:", err);
+      return res.status(500).json({ error: true, msg: err });
+    }
+  };
 
   // Remove upvote for restaurant
+  removeRestaurantUpvote = async (req, res) => {
+    const { restaurantId } = req.params;
+    const { userId } = req.body;
+
+    try {
+      const user = await this.userModel.findByPk(userId);
+      const restaurant = await this.model.findByPk(restaurantId);
+
+      if (user && restaurant) {
+        await user.removeUpvotedRestaurants(restaurant);
+        return res.json({
+          success: true,
+          msg: "Successfully removed restaurant upvote",
+        });
+      } else {
+        return res
+          .status(404)
+          .json({ error: true, msg: "User or restaurant not found" });
+      }
+    } catch (err) {
+      console.log("Error removing upvote:", err);
+      return res.status(500).json({ error: true, msg: err });
+    }
+  };
+
+  // Get all users who upvoted restaurant
+  getRestaurantUpvotes = async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+      const restaurant = await this.model.findByPk(restaurantId);
+
+      if (restaurant) {
+        const upvotes = await restaurant.getUpvotedBy();
+        return res.json(upvotes);
+      } else {
+        return res
+          .status(404)
+          .json({ error: true, msg: "Restaurant not found" });
+      }
+    } catch (err) {
+      console.log("Error getting upvotes:", err);
+      return res.status(400).json({ error: true, msg: err });
+    }
+  };
+
+  // Count total upvotes for restaurant
+  countRestaurantUpvotes = async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+      const restaurant = await this.model.findByPk(restaurantId);
+      const count = await restaurant.countUpvotedBy();
+      return res.json({ count });
+    } catch (err) {
+      console.log("Error counting total upvotes for restaurant");
+      return res.status(500).json({ error: true, msg: err });
+    }
+  };
+
+  // Get restaurants upvoted by user
+  getUserUpvotes = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+      const user = await this.userModel.findByPk(userId);
+      const upvotes = await user.getUpvotedRestaurants();
+      return res.json(upvotes);
+    } catch (err) {
+      console.log("Error counting restaurants upvoted by user");
+      return res.status(500).json({ error: true, msg: err });
+    }
+  };
+
+  // Count number of restaurants upvoted by user
+  countUserUpvotes = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+      const user = await this.userModel.findByPk(userId);
+      const count = await user.countUpvotedRestaurants();
+      return res.json({ count });
+    } catch (err) {
+      console.log("Error counting restaurants upvoted by user");
+      return res.status(500).json({ error: true, msg: err });
+    }
+  };
 
   createRestaurantEntry = async (restaurantDataFromAPI) => {
     try {

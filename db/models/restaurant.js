@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.user, {
         through: "restaurant_upvotes",
         foreignKey: "restaurant_id",
+        as: "upvotedBy",
       });
       this.belongsToMany(models.mealtype, {
         through: "restaurant_meal_types",

@@ -31,7 +31,6 @@ const {
   passwordresettoken,
   restaurant,
   location,
-  mealtype,
   openinghour,
   pricerange,
   restaurantstatus,
@@ -47,10 +46,10 @@ const authController = new AuthController(
 const restaurantsController = new RestaurantsController(
   restaurant,
   location,
-  mealtype,
   openinghour,
   pricerange,
-  restaurantstatus
+  restaurantstatus,
+  user
 );
 
 // Initialise routers
