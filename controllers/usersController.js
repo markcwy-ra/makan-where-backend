@@ -74,14 +74,38 @@ class UsersController extends BaseController {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
 
+      let hashedPassword = null;
       // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      if (currentPassword && newPassword) {
+        const compare = await bcrypt.compare(currentPassword, user.password);
+
+        // Check if current password is correct
+        if (!compare) {
+          return res.status(403).json({
+            success: false,
+            msg: "Current password entered is wrong!",
+          });
+        }
+        // Create new password
+        hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      }
+
+      // Generate new user before update
+      let preFlightUser = {
+        username,
+        email,
+      };
+      // If there's a new password, save it
+      if (hashedPassword) {
+        preFlightUser = { ...preFlightUser, password: hashedPassword };
+      }
+      // If there's a new photoUrl, save it
+      if (photoUrl) {
+        preFlightUser = { ...preFlightUser, photoUrl };
+      }
 
       // Update user
-      await this.model.update(
-        { username, email, password: hashedPassword, photoUrl },
-        { where: { id: userId } }
-      );
+      await this.model.update(preFlightUser, { where: { id: userId } });
 
       const updatedUser = await this.model.findByPk(userId);
 
@@ -89,7 +113,6 @@ class UsersController extends BaseController {
         success: true,
         msg: `User ${updatedUser.username} successfully updated profile`,
         data: updatedUser,
-
       });
     } catch (err) {
       console.log("Error updating user profile:", err);

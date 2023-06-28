@@ -22,7 +22,6 @@ class RestaurantsController extends BaseController {
   // Get restaurants from search
   getRestaurants = async (req, res) => {
     const { searchTerm, priceLevel, lat, lng } = req.query;
-
     try {
       // API request
       const apiUrl = new URL(
