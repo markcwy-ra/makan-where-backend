@@ -17,11 +17,13 @@ const verifyToken = require("./middlewares/verifyToken");
 const UsersRouter = require("./routers/usersRouter");
 const AuthRouter = require("./routers/authRouter");
 const RestaurantsRouter = require("./routers/restaurantsRouter");
+const FollowsRouter = require("./routers/followsRouter");
 
 // Import controllers
 const UsersController = require("./controllers/usersController");
 const AuthController = require("./controllers/authController");
 const RestaurantsController = require("./controllers/restaurantsController");
+const FollowsController = require("./controllers/followsController");
 
 // Import db
 const db = require("./db/models/index");
@@ -51,12 +53,17 @@ const restaurantsController = new RestaurantsController(
   restaurantstatus,
   user
 );
+const followsController = new FollowsController(user);
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController, verifyToken).routes();
 const authRouter = new AuthRouter(authController, verifyToken).routes();
 const restaurantsRouter = new RestaurantsRouter(
   restaurantsController,
+  verifyToken
+).routes();
+const followsRouter = new FollowsRouter(
+  followsController,
   verifyToken
 ).routes();
 
@@ -71,6 +78,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 app.use("/restaurants", restaurantsRouter);
+app.use("/follows", followsRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
