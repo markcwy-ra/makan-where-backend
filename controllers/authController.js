@@ -360,11 +360,22 @@ class AuthController extends BaseController {
         maxAge: process.env.REFRESH_MAX_AGE * 24 * 60 * 60 * 1000,
       });
 
+      const user = await this.model.findOne({
+        where: { username: decodedToken.username },
+      });
+
       // Return new JWT
       return res.status(201).json({
         success: true,
         msg: "Token refreshed successfully",
-        data: { token: newToken, refreshToken: newRefreshToken },
+        data: {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          username: user.username,
+          id: user.id,
+          email: user.email,
+          photoUrl: user.photoUrl,
+        },
       });
     } catch (err) {
       // If refresh token has expired or is otherwise invalid
