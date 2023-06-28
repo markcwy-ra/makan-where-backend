@@ -43,7 +43,16 @@ class UsersController extends BaseController {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
 
-      return res.json(user);
+      return res.status(201).json({
+        success: true,
+        msg: "User data retrieved.",
+        data: {
+          username: user.username,
+          id: user.id,
+          email: user.email,
+          photoUrl: user.photoUrl,
+        },
+      });
     } catch (err) {
       return res.status(400).json({ error: true, msg: err });
     }
@@ -119,7 +128,13 @@ class UsersController extends BaseController {
         return res.status(404).json({ error: true, msg: "No users found" });
       }
 
-      return res.json(users);
+      const usersCleaned = users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        photoUrl: user.photoUrl,
+      }));
+
+      return res.json(usersCleaned);
     } catch (err) {
       return res.status(400).json({ error: true, msg: err });
     }
