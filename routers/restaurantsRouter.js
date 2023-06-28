@@ -8,23 +8,45 @@ class RestaurantsRouter {
   }
 
   routes() {
-    router.get("/search", this.controller.getRestaurants);
-    router.get("/:placeId", this.controller.getOrAddRestaurant);
+    router.get("/search", this.verifyToken, this.controller.getRestaurants);
+    router.get(
+      "/:placeId",
+      this.verifyToken,
+      this.controller.getOrAddRestaurant
+    );
 
-    router.post("/:restaurantId/upvote", this.controller.upvoteRestaurant);
+    router.post(
+      "/:restaurantId/upvote",
+      this.verifyToken,
+      this.controller.upvoteRestaurant
+    );
     router.delete(
       "/:restaurantId/upvote/remove",
+      this.verifyToken,
       this.controller.removeRestaurantUpvote
     );
 
-    router.get("/:restaurantId/upvotes", this.controller.getRestaurantUpvotes);
+    router.get(
+      "/:restaurantId/upvotes",
+      this.verifyToken,
+      this.controller.getRestaurantUpvotes
+    );
     router.get(
       "/:restaurantId/upvotes/count",
+      this.verifyToken,
       this.controller.countRestaurantUpvotes
     );
 
-    router.get("/user/:userId/upvotes", this.controller.getUserUpvotes);
-    router.get("/user/:userId/upvotes/count", this.controller.countUserUpvotes);
+    router.get(
+      "/user/:userId/upvotes",
+      this.verifyToken,
+      this.controller.getUserUpvotes
+    );
+    router.get(
+      "/user/:userId/upvotes/count",
+      this.verifyToken,
+      this.controller.countUserUpvotes
+    );
 
     return router;
   }
