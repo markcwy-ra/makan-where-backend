@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.user, {
         through: "restaurant_upvotes",
         foreignKey: "restaurant_id",
+        as: "upvotedBy",
       });
       this.belongsToMany(models.mealtype, {
         through: "restaurant_meal_types",
@@ -44,6 +45,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         field: "address",
       },
+      placeId: {
+        type: DataTypes.STRING,
+        field: "place_id",
+        allowNull: false,
+      },
       locationId: {
         type: DataTypes.INTEGER,
         field: "location_id",
@@ -57,7 +63,7 @@ module.exports = (sequelize, DataTypes) => {
         field: "description",
       },
       photoUrl: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         field: "photo_url",
         validate: {
           isUrl: true,

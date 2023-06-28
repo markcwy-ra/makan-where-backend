@@ -1,6 +1,8 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
 const { Op } = require("sequelize");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 class UsersController extends BaseController {
   constructor(model, refreshTokenModel) {
@@ -61,7 +63,8 @@ class UsersController extends BaseController {
   // Update user profile
   updateUserProfile = async (req, res) => {
     const { userId } = req.params;
-    // const { username, email, address, photoUrl } = req.body;
+    const { username, email, currentPassword, newPassword, photoUrl } =
+      req.body;
 
     try {
       // Get user from db
@@ -71,11 +74,22 @@ class UsersController extends BaseController {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
 
-      await user.update(req.body);
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update user
+      await this.model.update(
+        { username, email, password: hashedPassword, photoUrl },
+        { where: { id: userId } }
+      );
 
       const updatedUser = await this.model.findByPk(userId);
 
-      return res.json(updatedUser);
+      return res.json({
+        success: true,
+        msg: `User ${updatedUser.username} successfully updated profile`,
+        data: updatedUser,
+      });
     } catch (err) {
       console.log("Error updating user profile:", err);
       return res.status(400).json({ error: true, msg: err.message });

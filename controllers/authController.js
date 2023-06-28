@@ -56,12 +56,12 @@ class AuthController extends BaseController {
       const refreshToken = this.generateToken(payload, true);
 
       const expiresAt = new Date();
-      expiresAt.setSeconds(
-        expiresAt.getSeconds() +
-          parseInt(process.env.REFRESH_EXPIRATION_MS) / 1000
+      expiresAt.setMilliseconds(
+        expiresAt.getMilliseconds() +
+          parseInt(process.env.REFRESH_EXPIRATION_MS)
       );
 
-      await this.saveToken(refreshToken, newUser.id, expiresAt);
+      await this.saveToken(refreshToken, newUser.id, expiresAt, true);
 
       // Send tokens in response
       res.cookie("refreshToken", refreshToken, {
@@ -115,7 +115,13 @@ class AuthController extends BaseController {
       const token = this.generateToken(payload);
       const refreshToken = this.generateToken(payload, true);
 
-      await this.saveToken(refreshToken, user.id, true);
+      const expiresAt = new Date();
+      expiresAt.setMilliseconds(
+        expiresAt.getMilliseconds() +
+          parseInt(process.env.REFRESH_EXPIRATION_MS)
+      );
+
+      await this.saveToken(refreshToken, user.id, expiresAt, true);
 
       // Send tokens in response
       res.cookie("refreshToken", refreshToken, {
