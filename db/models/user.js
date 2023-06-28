@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.restaurant, {
         through: "restaurant_upvotes",
         foreignKey: "user_id",
+        as: "upvotedRestaurants",
       });
       this.belongsToMany(models.review, {
         through: "review_upvotes",
@@ -84,10 +85,6 @@ module.exports = (sequelize, DataTypes) => {
             msg: "Please enter your username",
           },
         },
-      },
-      address: {
-        type: DataTypes.STRING,
-        field: "address",
       },
       locationId: {
         type: DataTypes.INTEGER,
