@@ -15,7 +15,7 @@ class AuthController extends BaseController {
   }
   // Sign up new user
   signUp = async (req, res) => {
-    const { email, password, username } = req.body;
+    const { email, password, username, photoUrl } = req.body;
 
     // Check if all fields provided
     if (!email || !password || !username) {
@@ -43,6 +43,7 @@ class AuthController extends BaseController {
         email,
         password: hashedPassword,
         username,
+        photoUrl,
         lastLogin: new Date(),
       });
 
@@ -71,7 +72,14 @@ class AuthController extends BaseController {
       return res.status(201).json({
         success: true,
         msg: "User registered successfully",
-        data: { token, refreshToken },
+        data: {
+          token,
+          refreshToken,
+          username: newUser.username,
+          id: newUser.id,
+          email: newUser.email,
+          photoUrl: newUser.photoUrl,
+        },
       });
     } catch (err) {
       return res
@@ -122,7 +130,14 @@ class AuthController extends BaseController {
       return res.status(200).json({
         success: true,
         msg: "User authenticated successfully",
-        data: { token, refreshToken },
+        data: {
+          token,
+          refreshToken,
+          username: user.username,
+          id: user.id,
+          email: user.email,
+          photoUrl: user.photoUrl,
+        },
       });
     } catch (err) {
       console.log(err);
@@ -345,11 +360,22 @@ class AuthController extends BaseController {
         maxAge: process.env.REFRESH_MAX_AGE * 24 * 60 * 60 * 1000,
       });
 
+      const user = await this.model.findOne({
+        where: { username: decodedToken.username },
+      });
+
       // Return new JWT
       return res.status(201).json({
         success: true,
         msg: "Token refreshed successfully",
-        data: { token: newToken, refreshToken: newRefreshToken },
+        data: {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          username: user.username,
+          id: user.id,
+          email: user.email,
+          photoUrl: user.photoUrl,
+        },
       });
     } catch (err) {
       // If refresh token has expired or is otherwise invalid

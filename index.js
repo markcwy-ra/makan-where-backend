@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 const app = express();
 
 const corsOptions = {
@@ -28,7 +28,7 @@ const db = require("./db/models/index");
 const { user, refreshtoken, passwordresettoken, restaurant } = db;
 
 // Initialise controllers
-const usersController = new UsersController(user);
+const usersController = new UsersController(user, refreshtoken);
 const authController = new AuthController(
   user,
   refreshtoken,

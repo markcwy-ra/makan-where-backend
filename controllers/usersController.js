@@ -3,9 +3,33 @@ const BaseController = require("./baseController");
 const { Op } = require("sequelize");
 
 class UsersController extends BaseController {
-  constructor(model) {
+  constructor(model, refreshTokenModel) {
     super(model);
+    this.refreshTokenModel = refreshTokenModel;
   }
+
+  // Get current user profile
+  getCurrentUser = async (req, res) => {
+    const token = req.headers["refresh-token"];
+    try {
+      const tokenId = await this.refreshTokenModel.findOne({
+        where: { token: token },
+      });
+      const user = await this.model.findByPk(tokenId.userId);
+      return res.status(201).json({
+        success: true,
+        msg: "User data retrieved.",
+        data: {
+          username: user.username,
+          id: user.id,
+          email: user.email,
+          photoUrl: user.photoUrl,
+        },
+      });
+    } catch (err) {
+      return res.status(400).json({ error: true, msg: err });
+    }
+  };
 
   // Get user profile
   getUserProfile = async (req, res) => {

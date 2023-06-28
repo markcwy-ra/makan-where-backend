@@ -8,6 +8,7 @@ class UsersRouter {
   }
 
   routes() {
+    router.get("/", this.verifyToken, this.controller.getCurrentUser);
     router.get("/:userId", this.controller.getUserProfile);
     router.put(
       "/:userId/update",
