@@ -75,7 +75,16 @@ class UsersController extends BaseController {
 
       const updatedUser = await this.model.findByPk(userId);
 
-      return res.json(updatedUser);
+      return res.status(201).json({
+        success: true,
+        msg: "User data updated.",
+        data: {
+          username: updatedUser.username,
+          id: updatedUser.id,
+          email: updatedUser.email,
+          photoUrl: updatedUser.photoUrl,
+        },
+      });
     } catch (err) {
       console.log("Error updating user profile:", err);
       return res.status(400).json({ error: true, msg: err.message });
