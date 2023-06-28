@@ -8,6 +8,9 @@ class RestaurantsRouter {
   }
 
   routes() {
+    router.get("/search", this.controller.getRestaurants);
+    router.get("/:placeId", this.controller.getOrAddRestaurant);
+
     return router;
   }
 }

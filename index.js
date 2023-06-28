@@ -25,7 +25,17 @@ const RestaurantsController = require("./controllers/restaurantsController");
 
 // Import db
 const db = require("./db/models/index");
-const { user, refreshtoken, passwordresettoken, restaurant } = db;
+const {
+  user,
+  refreshtoken,
+  passwordresettoken,
+  restaurant,
+  location,
+  mealtype,
+  openinghour,
+  pricerange,
+  restaurantstatus,
+} = db;
 
 // Initialise controllers
 const usersController = new UsersController(user, refreshtoken);
@@ -34,7 +44,14 @@ const authController = new AuthController(
   refreshtoken,
   passwordresettoken
 );
-const restaurantsController = new RestaurantsController(restaurant);
+const restaurantsController = new RestaurantsController(
+  restaurant,
+  location,
+  mealtype,
+  openinghour,
+  pricerange,
+  restaurantstatus
+);
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController, verifyToken).routes();
@@ -54,7 +71,7 @@ app.use(express.urlencoded({ extended: false }));
 // Use routers
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
-app.use("/places", restaurantsRouter);
+app.use("/restaurants", restaurantsRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
