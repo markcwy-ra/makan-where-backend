@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.user, {
         through: "review_upvotes",
         foreignKey: "review_id",
+        as: "upvotedBy",
       });
     }
   }

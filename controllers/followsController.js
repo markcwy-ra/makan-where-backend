@@ -58,7 +58,13 @@ class FollowsController extends BaseController {
 
     try {
       const user = await this.model.findByPk(userId, {
-        include: ["followerUsers"],
+        include: [
+          {
+            model: this.model,
+            as: "followerUsers",
+            attributes: { exclude: ["password"] },
+          },
+        ],
       });
 
       if (user) {
@@ -97,11 +103,17 @@ class FollowsController extends BaseController {
 
     try {
       const user = await this.model.findByPk(userId, {
-        include: ["followingUsers"],
+        include: [
+          {
+            model: this.model,
+            as: "followingUsers",
+            attributes: { exclude: ["password"] },
+          },
+        ],
       });
 
       if (user) {
-        return res.json({ success: true, followers: user.followingUsers });
+        return res.json({ success: true, following: user.followingUsers });
       } else {
         return res.status(404).json({ error: true, msg: "User not found" });
       }

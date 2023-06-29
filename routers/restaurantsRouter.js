@@ -27,25 +27,25 @@ class RestaurantsRouter {
     );
 
     router.get(
-      "/:restaurantId/upvotes",
-      this.verifyToken,
-      this.controller.getRestaurantUpvotes
-    );
-    router.get(
       "/:restaurantId/upvotes/count",
       this.verifyToken,
       this.controller.countRestaurantUpvotes
     );
-
     router.get(
-      "/user/:userId/upvotes",
+      "/:restaurantId/upvotes",
       this.verifyToken,
-      this.controller.getUserUpvotes
+      this.controller.getRestaurantUpvotes
     );
+
     router.get(
       "/user/:userId/upvotes/count",
       this.verifyToken,
       this.controller.countUserUpvotes
+    );
+    router.get(
+      "/user/:userId/upvotes",
+      this.verifyToken,
+      this.controller.getUserUpvotes
     );
 
     return router;

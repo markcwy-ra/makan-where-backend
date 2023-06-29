@@ -18,12 +18,14 @@ const UsersRouter = require("./routers/usersRouter");
 const AuthRouter = require("./routers/authRouter");
 const RestaurantsRouter = require("./routers/restaurantsRouter");
 const FollowsRouter = require("./routers/followsRouter");
+const ReviewsRouter = require("./routers/reviewsRouter");
 
 // Import controllers
 const UsersController = require("./controllers/usersController");
 const AuthController = require("./controllers/authController");
 const RestaurantsController = require("./controllers/restaurantsController");
 const FollowsController = require("./controllers/followsController");
+const ReviewsController = require("./controllers/reviewsController");
 
 // Import db
 const db = require("./db/models/index");
@@ -36,6 +38,7 @@ const {
   openinghour,
   pricerange,
   restaurantstatus,
+  review,
 } = db;
 
 // Initialise controllers
@@ -54,6 +57,7 @@ const restaurantsController = new RestaurantsController(
   user
 );
 const followsController = new FollowsController(user);
+const reviewsController = new ReviewsController(review, restaurant, user);
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController, verifyToken).routes();
@@ -64,6 +68,10 @@ const restaurantsRouter = new RestaurantsRouter(
 ).routes();
 const followsRouter = new FollowsRouter(
   followsController,
+  verifyToken
+).routes();
+const reviewsRouter = new ReviewsRouter(
+  reviewsController,
   verifyToken
 ).routes();
 
@@ -79,6 +87,7 @@ app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 app.use("/restaurants", restaurantsRouter);
 app.use("/follows", followsRouter);
+app.use("/reviews", reviewsRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
