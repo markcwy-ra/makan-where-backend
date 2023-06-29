@@ -72,6 +72,7 @@ class RestaurantsController extends BaseController {
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,address_components,formatted_address,place_id,editorial_summary,price_level,business_status,geometry,photos,opening_hours&key=${process.env.GMAPS_API_KEY}`
       );
       const restaurantDataFromAPI = response.data.result;
+      console.log(restaurantDataFromAPI);
       restaurant = await this.createRestaurantEntry(restaurantDataFromAPI);
     }
 
