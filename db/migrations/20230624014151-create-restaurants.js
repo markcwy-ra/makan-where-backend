@@ -43,7 +43,6 @@ module.exports = {
         type: Sequelize.FLOAT,
       },
       price_range_id: {
-        allowNull: false,
         type: Sequelize.INTEGER,
         references: {
           model: "price_ranges",
@@ -51,7 +50,6 @@ module.exports = {
         },
       },
       status_id: {
-        allowNull: false,
         type: Sequelize.INTEGER,
         references: {
           model: "restaurant_status",

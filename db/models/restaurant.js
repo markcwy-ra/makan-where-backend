@@ -86,7 +86,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       priceRangeId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
         field: "price_range_id",
         references: {
           model: "pricerange",
@@ -99,7 +98,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       statusId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
         field: "status_id",
         references: {
           model: "restaurantstatus",

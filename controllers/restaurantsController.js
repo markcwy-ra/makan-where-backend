@@ -73,6 +73,17 @@ class RestaurantsController extends BaseController {
       );
       const restaurantDataFromAPI = response.data.result;
       restaurant = await this.createRestaurantEntry(restaurantDataFromAPI);
+
+      // Re-fetch restaurant with eager loading
+      restaurant = await this.model.findOne({
+        where: { id: restaurant.id },
+        include: [
+          this.locationModel,
+          this.priceRangeModel,
+          this.restaurantStatusModel,
+          this.openingHourModel,
+        ],
+      });
     }
 
     return res.json({
@@ -246,15 +257,29 @@ class RestaurantsController extends BaseController {
       );
 
       // Find price range
-      const priceSymbols = ["$", "$$", "$$$", "$$$$"];
-      const priceRange = await this.priceRangeModel.findOne({
-        where: { priceRange: priceSymbols[price_level - 1] },
-      });
+      let priceRangeId = null;
+      if (price_level !== undefined) {
+        const priceSymbols = ["$", "$$", "$$$", "$$$$"];
+        const priceRange = await this.priceRangeModel.findOne({
+          where: { priceRange: priceSymbols[price_level - 1] },
+        });
+
+        if (priceRange) {
+          priceRangeId = priceRange.id;
+        }
+      }
 
       // Find restaurant status
-      const restaurantStatus = await this.restaurantStatusModel.findOne({
-        where: { status: business_status.toLowerCase() },
-      });
+      let statusId = null;
+      if (business_status !== undefined) {
+        const restaurantStatus = await this.restaurantStatusModel.findOne({
+          where: { status: business_status.toLowerCase() },
+        });
+
+        if (restaurantStatus) {
+          statusId = restaurantStatus.id;
+        }
+      }
 
       // Create restaurant
       const [restaurant, restaurantCreated] = await this.model.findOrCreate({
@@ -267,8 +292,8 @@ class RestaurantsController extends BaseController {
           description: editorial_summary ? editorial_summary : null,
           photoUrl: photoUrl,
           googleMapsUrl: googleMapsUrl,
-          priceRangeId: priceRange.id,
-          statusId: restaurantStatus.id,
+          priceRangeId: priceRangeId,
+          statusId: statusId,
         },
       });
 
@@ -284,19 +309,26 @@ class RestaurantsController extends BaseController {
       ];
       if (opening_hours && opening_hours.periods) {
         for (const period of opening_hours.periods) {
-          const openingHour = {
-            day: days[period.open.day],
-            openingTime: `${period.open.time.slice(
-              0,
-              2
-            )}:${period.open.time.slice(2)}`,
-            closingTime: `${period.close.time.slice(
-              0,
-              2
-            )}:${period.close.time.slice(2)}`,
-            restaurantId: restaurant.id,
-          };
-          await this.openingHourModel.create(openingHour);
+          if (
+            period.open &&
+            period.open.time &&
+            period.close &&
+            period.close.time
+          ) {
+            const openingHour = {
+              day: days[period.open.day],
+              openingTime: `${period.open.time.slice(
+                0,
+                2
+              )}:${period.open.time.slice(2)}`,
+              closingTime: `${period.close.time.slice(
+                0,
+                2
+              )}:${period.close.time.slice(2)}`,
+              restaurantId: restaurant.id,
+            };
+            await this.openingHourModel.create(openingHour);
+          }
         }
       }
 
