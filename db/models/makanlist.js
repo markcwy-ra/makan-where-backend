@@ -4,7 +4,6 @@ module.exports = (sequelize, DataTypes) => {
   class Makanlist extends Model {
     static associate(models) {
       this.belongsTo(models.user, { foreignKey: "user_id" });
-      this.belongsTo(models.location, { foreignKey: "location_id" });
 
       this.belongsToMany(models.restaurant, {
         through: "makanlist_restaurants",
@@ -13,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.user, {
         through: "makanlist_upvotes",
         foreignKey: "makanlist_id",
+        as: "upvotedBy",
       });
     }
   }
@@ -37,18 +37,9 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         field: "description",
       },
-      locationId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: "location_id",
-        references: {
-          model: "location",
-          key: "id",
-        },
-      },
       photoUrl: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: DataTypes.TEXT,
+        allowNull: true,
         field: "photo_url",
         validate: {
           isUrl: true,
