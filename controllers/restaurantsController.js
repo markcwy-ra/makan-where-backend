@@ -63,6 +63,12 @@ class RestaurantsController extends BaseController {
     // Check if restaurant is in db
     let restaurant = await this.model.findOne({
       where: { placeId },
+      include: [
+        this.locationModel,
+        this.priceRangeModel,
+        this.restaurantStatusModel,
+        this.openingHourModel,
+      ],
     });
 
     // If not, get details from API and add to db
@@ -72,7 +78,7 @@ class RestaurantsController extends BaseController {
         `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,address_components,formatted_address,place_id,editorial_summary,price_level,business_status,geometry,photos,opening_hours&key=${process.env.GMAPS_API_KEY}`
       );
       const restaurantDataFromAPI = response.data.result;
-      console.log(restaurantDataFromAPI);
+
       restaurant = await this.createRestaurantEntry(restaurantDataFromAPI);
 
       // Re-fetch restaurant with eager loading
@@ -290,7 +296,7 @@ class RestaurantsController extends BaseController {
           address: formatted_address,
           placeId: place_id,
           locationId: location.id,
-          description: editorial_summary ? editorial_summary : null,
+          description: editorial_summary ? editorial_summary.overview : null,
           photoUrl: photoUrl,
           googleMapsUrl: googleMapsUrl,
           priceRangeId: priceRangeId,

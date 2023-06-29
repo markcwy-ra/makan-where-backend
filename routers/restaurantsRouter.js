@@ -20,6 +20,13 @@ class RestaurantsRouter {
       this.verifyToken,
       this.controller.upvoteRestaurant
     );
+
+    // router.get(
+    //   "/:restaurantId/upvote/:userId",
+    //   this.verifyToken,
+    //   this.controller.getUserUpvoteStatus
+    // );
+
     router.delete(
       "/:restaurantId/upvote/remove",
       this.verifyToken,
