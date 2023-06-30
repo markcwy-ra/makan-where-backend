@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.makanlist, {
         through: "makanlist_upvotes",
         foreignKey: "user_id",
+        as: "upvotedMakanlists",
       });
     }
   }

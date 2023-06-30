@@ -408,8 +408,40 @@ class ReviewsController extends BaseController {
       const count = upvotedReviews.length;
       return res.json({ count });
     } catch (err) {
-      console.log("Error fetching user's upvoted reviews");
+      console.log("Error counting user's upvoted reviews");
       return res.status(500).json({ error: true, msg: err });
+    }
+  };
+
+  // Check if user has upvoted review
+  getUserUpvoteStatusForReview = async (req, res) => {
+    const { reviewId, userId } = req.params;
+    try {
+      const user = await this.userModel.findByPk(userId, {
+        attributes: { exclude: ["password"] },
+      });
+      if (!user) {
+        return res.status(404).json({ error: true, msg: "User not found" });
+      }
+
+      const review = await this.model.findByPk(reviewId);
+      if (!review) {
+        return res.status(404).json({ error: true, msg: "Review not found" });
+      }
+      const upvotedReviews = await user.getUpvotedReviews();
+      const hasUpvoted = upvotedReviews.some(
+        (review) => review.id === Number(reviewId)
+      );
+
+      return res.json({
+        success: true,
+        hasUpvoted,
+        user,
+        review,
+      });
+    } catch (err) {
+      console.log("Error checking upvote status for review:", err);
+      return res.status(500).json({ success: false, msg: err });
     }
   };
 }

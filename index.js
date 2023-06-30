@@ -19,6 +19,7 @@ const AuthRouter = require("./routers/authRouter");
 const RestaurantsRouter = require("./routers/restaurantsRouter");
 const FollowsRouter = require("./routers/followsRouter");
 const ReviewsRouter = require("./routers/reviewsRouter");
+const MakanlistsRouter = require("./routers/makanlistsRouter");
 
 // Import controllers
 const UsersController = require("./controllers/usersController");
@@ -26,6 +27,7 @@ const AuthController = require("./controllers/authController");
 const RestaurantsController = require("./controllers/restaurantsController");
 const FollowsController = require("./controllers/followsController");
 const ReviewsController = require("./controllers/reviewsController");
+const MakanlistsController = require("./controllers/makanlistsController");
 
 // Import db
 const db = require("./db/models/index");
@@ -39,6 +41,7 @@ const {
   pricerange,
   restaurantstatus,
   review,
+  makanlist,
 } = db;
 
 // Initialise controllers
@@ -58,6 +61,11 @@ const restaurantsController = new RestaurantsController(
 );
 const followsController = new FollowsController(user);
 const reviewsController = new ReviewsController(review, restaurant, user);
+const makanlistsController = new MakanlistsController(
+  makanlist,
+  restaurant,
+  user
+);
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController, verifyToken).routes();
@@ -74,6 +82,10 @@ const reviewsRouter = new ReviewsRouter(
   reviewsController,
   verifyToken
 ).routes();
+const makanlistsRouter = new MakanlistsRouter(
+  makanlistsController,
+  verifyToken
+).routes();
 
 // Enable CORS
 app.use(cors(corsOptions));
@@ -88,6 +100,7 @@ app.use("/auth", authRouter);
 app.use("/restaurants", restaurantsRouter);
 app.use("/follows", followsRouter);
 app.use("/reviews", reviewsRouter);
+app.use("/makanlists", makanlistsRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

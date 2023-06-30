@@ -215,6 +215,41 @@ class RestaurantsController extends BaseController {
     }
   };
 
+  // Check if user has upvoted restaurant
+  getUserUpvoteStatus = async (req, res) => {
+    const { restaurantId, userId } = req.params;
+    try {
+      const user = await this.userModel.findByPk(userId, {
+        attributes: { exclude: ["password"] },
+      });
+      if (!user) {
+        return res.status(404).json({ error: true, msg: "User not found" });
+      }
+
+      const restaurant = await this.model.findByPk(restaurantId);
+      if (!restaurant) {
+        return res
+          .status(404)
+          .json({ error: true, msg: "Restaurant not found" });
+      }
+
+      const upvotedRestaurants = await user.getUpvotedRestaurants();
+      const hasUpvoted = upvotedRestaurants.some(
+        (restaurant) => restaurant.id === Number(restaurantId)
+      );
+
+      return res.json({
+        success: true,
+        hasUpvoted,
+        user,
+        restaurant,
+      });
+    } catch (err) {
+      console.log("Error checking upvote status:", err);
+      return res.status(500).json({ success: false, msg: err });
+    }
+  };
+
   createRestaurantEntry = async (restaurantDataFromAPI) => {
     try {
       const {

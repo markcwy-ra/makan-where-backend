@@ -15,6 +15,12 @@ class RestaurantsRouter {
       this.controller.getOrAddRestaurant
     );
 
+    router.get(
+      "/:restaurantId/upvote/:userId",
+      this.verifyToken,
+      this.controller.getUserUpvoteStatus
+    );
+
     router.post(
       "/:restaurantId/upvote",
       this.verifyToken,
