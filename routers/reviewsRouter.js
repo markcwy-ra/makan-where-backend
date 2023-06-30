@@ -47,6 +47,12 @@ class ReviewsRouter {
     );
     router.delete("/:reviewId", this.verifyToken, this.controller.deleteReview);
 
+    router.get(
+      "/:reviewId/upvote/:userId",
+      this.verifyToken,
+      this.controller.getUserUpvoteStatusForReview
+    );
+
     router.delete(
       "/:reviewId/upvote/remove",
       this.verifyToken,
