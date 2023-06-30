@@ -30,9 +30,10 @@ class RestaurantsController extends BaseController {
 
       // Set parameters
       apiUrl.searchParams.set(`location`, `${lat}, ${lng}`);
-      apiUrl.searchParams.set(`radius`, 5000);
-      apiUrl.searchParams.set(`type`, `restaurant`);
+      // apiUrl.searchParams.set(`radius`, 5000);
+      apiUrl.searchParams.set(`type`, `restaurant|cafe|bakery|bar`);
       apiUrl.searchParams.set(`keyword`, searchTerm);
+      apiUrl.searchParams.set(`rankby`, `distance`);
       apiUrl.searchParams.set(`key`, process.env.GMAPS_API_KEY);
 
       // Add filters to request
