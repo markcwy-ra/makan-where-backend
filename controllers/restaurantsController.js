@@ -128,8 +128,7 @@ class RestaurantsController extends BaseController {
 
   // Remove upvote for restaurant
   removeRestaurantUpvote = async (req, res) => {
-    const { restaurantId } = req.params;
-    const { userId } = req.body;
+    const { restaurantId, userId } = req.params;
 
     try {
       const user = await this.userModel.findByPk(userId);

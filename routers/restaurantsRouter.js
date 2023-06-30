@@ -28,7 +28,7 @@ class RestaurantsRouter {
     );
 
     router.delete(
-      "/:restaurantId/upvote/remove",
+      "/:restaurantId/upvote/remove/:userId",
       this.verifyToken,
       this.controller.removeRestaurantUpvote
     );
