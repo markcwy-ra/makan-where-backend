@@ -207,13 +207,16 @@ class MakanlistsController extends BaseController {
       });
 
       const makanlistRestaurant = updatedMakanlist.restaurants[0];
+      console.log("Makanlist restaurant:", makanlistRestaurant);
+      const makanlistRestaurantId =
+        makanlistRestaurant.makanlist_restaurants.id;
 
       // Log activity
       try {
         await this.userActivityModel.create({
           userId,
           activityType: "added",
-          targetId: makanlistRestaurant.id, // makanlist_restaurants id
+          targetId: makanlistRestaurantId, // makanlist_restaurant.id
           targetType: "makanlistrestaurant",
         });
       } catch (activityError) {

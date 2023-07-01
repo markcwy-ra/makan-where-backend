@@ -155,31 +155,38 @@ class UserActivitiesController extends BaseController {
             }
             case "makanlistrestaurant": {
               const makanlistRestaurant =
-                await sequelize.models.makanlist_restaurants.findOne({
-                  where: { id: userActivity.targetId },
-                  include: [
-                    { model: this.makanlistModel, as: "makanlist" },
-                    { model: this.restaurantModel, as: "restaurant" },
-                  ],
-                });
+                await sequelize.models.makanlist_restaurants.findByPk(
+                  userActivity.targetId,
+                  {
+                    attributes: [
+                      "id",
+                      "restaurant_id",
+                      "makanlist_id",
+                      "createdAt",
+                      "updatedAt",
+                    ],
+                  }
+                );
+              console.log("Makanlist restaurant:", makanlistRestaurant);
 
               if (!makanlistRestaurant) {
                 console.log(
-                  `No restaurant in makanlist found with id ${userActivity.targetId}`
+                  `No makanlist restaurant found with id ${userActivity.targetId}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a restaurant that was removed from ${user.username}'s makanlist`,
+                  error: `This activity refers to a makanlist restaurant that no longer exists`,
                 };
                 break;
               }
 
+              // Fetch the makanlist
               const makanlist = await this.makanlistModel.findByPk(
-                makanlistRestaurant.makanlistId
+                makanlistRestaurant.makanlist_id
               );
-
+              console.log("Makanlist:", makanlist);
               if (!makanlist) {
                 console.log(
-                  `No restaurant in makanlist found with id ${makanlistRestaurant.makanlistId}`
+                  `No makanlist found with id ${makanlistRestaurant.makanlist_id}`
                 );
                 targetDetails = {
                   error: `This activity refers to a makanlist that no longer exists`,
@@ -187,21 +194,22 @@ class UserActivitiesController extends BaseController {
                 break;
               }
 
+              // Fetch the restaurant
               const restaurant = await this.restaurantModel.findByPk(
-                makanlistRestaurant.restaurantId
+                makanlistRestaurant.restaurant_id
               );
-
+              console.log("Restaurant:", restaurant);
               if (!restaurant) {
                 console.log(
-                  `No restaurant in makanlist found with id ${makanlistRestaurant.restaurantId}`
+                  `No restaurant found with id ${makanlistRestaurant.restaurant_id}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a restaurant that was removed from ${user.username}'s makanlist`,
+                  error: `This activity refers to a restaurant that no longer exists`,
                 };
                 break;
               }
 
-              targetDetails = { makanlist, restaurant };
+              targetDetails = { restaurant, makanlist };
               break;
             }
             case "restaurant": {

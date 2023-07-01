@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.restaurant, {
         through: "makanlist_restaurants",
         foreignKey: "makanlist_id",
+        otherKey: "id",
       });
       this.belongsToMany(models.user, {
         through: "makanlist_upvotes",
