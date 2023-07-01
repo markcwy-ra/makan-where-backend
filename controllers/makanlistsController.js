@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
+const { Op } = require("sequelize");
 
 class MakanlistsController extends BaseController {
   constructor(model, restaurantModel, userModel, userActivityModel) {
@@ -608,6 +609,45 @@ class MakanlistsController extends BaseController {
     } catch (err) {
       console.log("Error getting upvotes for user's makanlists:", err);
       return res.status(500).json({ success: false, msg: err.message });
+    }
+  };
+
+  // Get search results for makanlists by title
+  searchMakanlistsByTitle = async (req, res) => {
+    const { title } = req.params;
+
+    try {
+      // Find all makanlists with title that match search term
+      const makanlists = await this.model.findAll({
+        where: {
+          title: {
+            [Op.iLike]: `%${title}%`,
+          },
+        },
+        include: [
+          {
+            model: this.userModel,
+            attributes: ["id", "username", "photoUrl"],
+          },
+          {
+            model: this.restaurantModel,
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
+
+      if (makanlists.length === 0) {
+        return res
+          .status(404)
+          .json({ error: true, msg: "No makanlists found" });
+      }
+
+      return res.json(makanlists);
+    } catch (err) {
+      console.log("Error fetching makanlists for search:", err);
+      return res.status(400).json({ error: true, msg: err.message });
     }
   };
 }
