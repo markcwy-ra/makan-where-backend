@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
+const { fn, col } = require("sequelize");
 
 class ReviewsController extends BaseController {
   constructor(model, restaurantModel, userModel, userActivityModel) {
@@ -188,6 +189,13 @@ class ReviewsController extends BaseController {
         recommendedDishes,
       });
 
+      // Calculate average rating and update restaurant entry
+      const averageRating = await this.calculateAverageRating(restaurantId);
+      await this.restaurantModel.update(
+        { averageRating: averageRating },
+        { where: { id: restaurantId } }
+      );
+
       // Log activity
       try {
         await this.userActivityModel.create({
@@ -247,6 +255,15 @@ class ReviewsController extends BaseController {
       existingReview.photoUrl = photoUrl;
       existingReview.recommendedDishes = recommendedDishes;
       await existingReview.save();
+
+      // Calculate average rating and update restaurant entry
+      const averageRating = await this.calculateAverageRating(
+        existingReview.restaurantId
+      );
+      await this.restaurantModel.update(
+        { averageRating: averageRating },
+        { where: { id: existingReview.restaurantId } }
+      );
 
       // Log activity
       try {
@@ -309,6 +326,9 @@ class ReviewsController extends BaseController {
         return res.status(404).json({ error: true, msg: "Review not found" });
       }
 
+      // Get restaurantId
+      const restaurantId = existingReview.restaurantId;
+
       // Log activity
       try {
         await this.userActivityModel.create({
@@ -326,6 +346,14 @@ class ReviewsController extends BaseController {
 
       // Delete review
       await existingReview.destroy();
+
+      // Calculate and update average rating
+      const averageRating = await this.calculateAverageRating(restaurantId);
+      const averageRatingToSet = averageRating || 0; // If averageRating is null, set to 0
+      await this.restaurantModel.update(
+        { averageRating: averageRatingToSet },
+        { where: { id: restaurantId } }
+      );
 
       return res.json({ success: true, msg: "Review deleted successfully" });
     } catch (err) {
@@ -505,6 +533,17 @@ class ReviewsController extends BaseController {
       console.log("Error checking upvote status for review:", err);
       return res.status(500).json({ success: false, msg: err });
     }
+  };
+
+  // Calculate average rating of restaurant
+  calculateAverageRating = async (restaurantId) => {
+    const result = await this.model.findOne({
+      attributes: [[fn("AVG", col("rating")), "averageRating"]],
+      where: { restaurantId: restaurantId },
+      raw: true,
+    });
+
+    return result.averageRating ? parseFloat(result.averageRating) : 0;
   };
 }
 

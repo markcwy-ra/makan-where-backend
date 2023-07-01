@@ -360,6 +360,7 @@ class RestaurantsController extends BaseController {
           description: editorial_summary ? editorial_summary.overview : null,
           photoUrl: photoUrl,
           googleMapsUrl: googleMapsUrl,
+          averageRating: 0,
           priceRangeId: priceRangeId,
           statusId: statusId,
         },
