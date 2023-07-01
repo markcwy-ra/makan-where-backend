@@ -490,7 +490,9 @@ class MakanlistsController extends BaseController {
       const makanlist = await this.model.findByPk(makanlistId);
 
       if (makanlist) {
-        const upvotes = await makanlist.getUpvotedBy();
+        const upvotes = await makanlist.getUpvotedBy({
+          attributes: { exclude: ["password"] },
+        });
         return res.json(upvotes);
       } else {
         return res
@@ -530,7 +532,20 @@ class MakanlistsController extends BaseController {
 
     try {
       const user = await this.userModel.findByPk(userId);
-      const upvotedMakanlists = await user.getUpvotedMakanlists();
+      const upvotedMakanlists = await user.getUpvotedMakanlists({
+        include: [
+          {
+            model: this.userModel,
+            attributes: ["id", "username", "photoUrl"],
+          },
+          {
+            model: this.restaurantModel,
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
       return res.json({ upvotedMakanlists });
     } catch (err) {
       console.log("Error fetching user's upvoted makanlists");
@@ -600,7 +615,20 @@ class MakanlistsController extends BaseController {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
 
-      const upvotedMakanlists = await user.getUpvotedMakanlists();
+      const upvotedMakanlists = await user.getUpvotedMakanlists({
+        include: [
+          {
+            model: this.userModel,
+            attributes: ["id", "username", "photoUrl"],
+          },
+          {
+            model: this.restaurantModel,
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
 
       return res.json({
         success: true,
