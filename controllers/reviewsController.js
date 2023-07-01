@@ -2,10 +2,11 @@
 const BaseController = require("./baseController");
 
 class ReviewsController extends BaseController {
-  constructor(model, restaurantModel, userModel) {
+  constructor(model, restaurantModel, userModel, userActivityModel) {
     super(model);
     this.restaurantModel = restaurantModel;
     this.userModel = userModel;
+    this.userActivityModel = userActivityModel;
   }
 
   // Get all reviews for restaurant
@@ -187,6 +188,18 @@ class ReviewsController extends BaseController {
         recommendedDishes,
       });
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "added",
+          targetId: newReview.id,
+          targetType: "review",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       // Eager load user and restaurant data
       const reviewWithDetails = await this.model.findOne({
         where: { id: newReview.id },
@@ -234,6 +247,18 @@ class ReviewsController extends BaseController {
       existingReview.photoUrl = photoUrl;
       existingReview.recommendedDishes = recommendedDishes;
       await existingReview.save();
+
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "updated",
+          targetId: existingReview.id,
+          targetType: "review",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
 
       // Get updated review
       const updatedReview = await this.model.findOne({
@@ -284,6 +309,18 @@ class ReviewsController extends BaseController {
         return res.status(404).json({ error: true, msg: "Review not found" });
       }
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "deleted",
+          targetId: existingReview.id,
+          targetType: "review",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       // Fetch and delete all upvotes associated with review
       await existingReview.removeUpvotedBy(existingReview.upvotedBy);
 
@@ -308,6 +345,19 @@ class ReviewsController extends BaseController {
 
       if (user && review) {
         await user.addUpvotedReviews(review);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "upvoted",
+            targetId: reviewId,
+            targetType: "review",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({ success: true, msg: "Successfully upvoted review" });
       } else {
         return res
@@ -330,6 +380,18 @@ class ReviewsController extends BaseController {
       const review = await this.model.findByPk(reviewId);
 
       if (user && review) {
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "removed upvote",
+            targetId: reviewId,
+            targetType: "review",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         await user.removeUpvotedReviews(review);
         return res.json({
           success: true,

@@ -2,8 +2,9 @@
 const BaseController = require("./baseController");
 
 class FollowsController extends BaseController {
-  constructor(model) {
+  constructor(model, userActivityModel) {
     super(model);
+    this.userActivityModel = userActivityModel;
   }
 
   // Follow user
@@ -17,6 +18,19 @@ class FollowsController extends BaseController {
 
       if (user && follower) {
         await follower.addFollowingUsers(user);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId: followerId,
+            activityType: "follow",
+            targetId: userId,
+            targetType: "user",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({ success: true, msg: "Successfully followed user" });
       } else {
         return res
@@ -40,6 +54,19 @@ class FollowsController extends BaseController {
 
       if (user && follower) {
         await follower.removeFollowingUsers(user);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId: followerId,
+            activityType: "unfollow",
+            targetId: userId,
+            targetType: "user",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({ success: true, msg: "Successfully unfollowed user" });
       } else {
         return res

@@ -9,7 +9,8 @@ class RestaurantsController extends BaseController {
     openingHourModel,
     priceRangeModel,
     restaurantStatusModel,
-    userModel
+    userModel,
+    userActivityModel
   ) {
     super(model);
     this.locationModel = locationModel;
@@ -17,6 +18,7 @@ class RestaurantsController extends BaseController {
     this.priceRangeModel = priceRangeModel;
     this.restaurantStatusModel = restaurantStatusModel;
     this.userModel = userModel;
+    this.userActivityModel = userActivityModel;
   }
 
   // Get restaurants from search
@@ -111,6 +113,19 @@ class RestaurantsController extends BaseController {
 
       if (user && restaurant) {
         await user.addUpvotedRestaurants(restaurant);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "upvoted",
+            targetId: restaurantId,
+            targetType: "restaurant",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({
           success: true,
           msg: "Successfully upvoted restaurant",
@@ -135,6 +150,18 @@ class RestaurantsController extends BaseController {
       const restaurant = await this.model.findByPk(restaurantId);
 
       if (user && restaurant) {
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "removed upvote",
+            targetId: restaurantId,
+            targetType: "restaurant",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         await user.removeUpvotedRestaurants(restaurant);
         return res.json({
           success: true,

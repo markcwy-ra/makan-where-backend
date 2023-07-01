@@ -2,10 +2,11 @@
 const BaseController = require("./baseController");
 
 class MakanlistsController extends BaseController {
-  constructor(model, restaurantModel, userModel) {
+  constructor(model, restaurantModel, userModel, userActivityModel) {
     super(model);
     this.restaurantModel = restaurantModel;
     this.userModel = userModel;
+    this.userActivityModel = userActivityModel;
   }
 
   // Get all makanlists
@@ -137,6 +138,18 @@ class MakanlistsController extends BaseController {
         photoUrl,
       });
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "added",
+          targetId: newMakanlist.id,
+          targetType: "makanlist",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       return res.json({
         success: true,
         msg: "Makanlist created successfully",
@@ -192,6 +205,20 @@ class MakanlistsController extends BaseController {
         ],
       });
 
+      const makanlistRestaurant = updatedMakanlist.restaurants[0];
+
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "added",
+          targetId: makanlistRestaurant.id, // makanlist_restaurants id
+          targetType: "makanlistrestaurant",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       return res.json({
         success: true,
         msg: "Restaurant successfully added to makanlist",
@@ -239,6 +266,18 @@ class MakanlistsController extends BaseController {
         ],
       });
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "updated",
+          targetId: updatedMakanlist.id,
+          targetType: "makanlist",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       return res.json({
         success: true,
         msg: "Makanlist successfully updated",
@@ -285,6 +324,18 @@ class MakanlistsController extends BaseController {
           .json({ error: true, msg: "Restaurant not found" });
       }
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "deleted",
+          targetId: makanlistRestaurant.id,
+          targetType: "makanlistrestaurant",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       await makanlist.removeRestaurant(makanlistRestaurant);
 
       const updatedMakanlist = await makanlist.getRestaurants();
@@ -322,6 +373,18 @@ class MakanlistsController extends BaseController {
           .json({ error: true, msg: "Makanlist not found" });
       }
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "deleted",
+          targetId: makanlistId,
+          targetType: "makanlist",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
       // Get and remove upvotes related to makanlist
       const upvotes = await makanlist.getUpvotedBy();
       await makanlist.removeUpvotedBy(upvotes);
@@ -351,6 +414,19 @@ class MakanlistsController extends BaseController {
 
       if (user && makanlist) {
         await user.addUpvotedMakanlists(makanlist);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "upvoted",
+            targetId: makanlistId,
+            targetType: "makanlist",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({
           success: true,
           msg: "Successfully upvoted makanlist",
@@ -376,7 +452,20 @@ class MakanlistsController extends BaseController {
       const makanlist = await this.model.findByPk(makanlistId);
 
       if (user && makanlist) {
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "removed upvote",
+            targetId: makanlistId,
+            targetType: "makanlist",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         await user.removeUpvotedMakanlists(makanlist);
+
         return res.json({
           success: true,
           msg: "Successfully removed makanlist upvote",
