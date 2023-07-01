@@ -30,7 +30,7 @@ class ReviewsRouter {
       this.controller.getAllUserReviews
     );
     router.get(
-      "/restaurant/:restaurantId/user/:userId",
+      "/restaurant/:placeId/user/:userId",
       this.verifyToken,
       this.controller.getOneUserReview
     );
@@ -54,7 +54,7 @@ class ReviewsRouter {
     );
 
     router.delete(
-      "/:reviewId/upvote/remove",
+      "/:reviewId/upvote/remove/:userId",
       this.verifyToken,
       this.controller.removeReviewUpvote
     );

@@ -248,11 +248,18 @@ class MakanlistsController extends BaseController {
           .status(404)
           .json({ error: true, msg: "Makanlist not found" });
       }
+      let preFlightList = {
+        title,
+        description,
+      };
 
-      await this.model.update(
-        { title, description, photoUrl },
-        { where: { id: makanlistId, userId } }
-      );
+      if (photoUrl) {
+        preFlightList = { ...preFlightList, photoUrl };
+      }
+
+      await this.model.update(preFlightList, {
+        where: { id: makanlistId, userId },
+      });
 
       const updatedMakanlist = await this.model.findOne({
         where: { id: makanlistId, userId },
@@ -445,8 +452,7 @@ class MakanlistsController extends BaseController {
 
   // Remove makanlist upvote
   removeMakanlistUpvote = async (req, res) => {
-    const { makanlistId } = req.params;
-    const { userId } = req.body;
+    const { makanlistId, userId } = req.params;
 
     try {
       const user = await this.userModel.findByPk(userId);

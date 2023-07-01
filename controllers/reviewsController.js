@@ -110,7 +110,7 @@ class ReviewsController extends BaseController {
 
   // Get one review by user
   getOneUserReview = async (req, res) => {
-    const { userId, restaurantId } = req.params;
+    const { userId, placeId } = req.params;
 
     try {
       const user = await this.userModel.findByPk(userId);
@@ -118,7 +118,9 @@ class ReviewsController extends BaseController {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
 
-      const restaurant = await this.restaurantModel.findByPk(restaurantId);
+      let restaurant = await this.restaurantModel.findOne({
+        where: { placeId },
+      });
       if (!restaurant) {
         return res
           .status(404)
@@ -126,7 +128,7 @@ class ReviewsController extends BaseController {
       }
 
       const review = await this.model.findOne({
-        where: { userId, restaurantId },
+        where: { userId, restaurantId: restaurant.id },
         include: [
           {
             model: this.userModel,
@@ -400,8 +402,7 @@ class ReviewsController extends BaseController {
 
   // Remove review upvote
   removeReviewUpvote = async (req, res) => {
-    const { reviewId } = req.params;
-    const { userId } = req.body; // User wanting to remove upvote
+    const { reviewId, userId } = req.params;
 
     try {
       const user = await this.userModel.findByPk(userId);
