@@ -8,7 +8,7 @@ class UserActivitiesRouter {
   }
 
   routes() {
-    router.get("/:userId", this.controller.getUserFeed);
+    router.get("/:userId", this.verifyToken, this.controller.getUserFeed);
 
     return router;
   }

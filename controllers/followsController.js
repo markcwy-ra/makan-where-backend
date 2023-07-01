@@ -168,6 +168,50 @@ class FollowsController extends BaseController {
       return res.status(500).json({ error: true, msg: err });
     }
   };
+
+  // Check if user is following user
+  getUserFollowStatus = async (req, res) => {
+    const { userId, followerId } = req.params;
+
+    try {
+      const follower = await this.model.findByPk(followerId, {
+        attributes: { exclude: ["password"] },
+        include: [
+          {
+            model: this.model,
+            as: "followingUsers",
+            through: { attributes: [] },
+          },
+        ],
+      });
+
+      if (!follower) {
+        return res.status(404).json({ error: true, msg: "Follower not found" });
+      }
+
+      const user = await this.model.findByPk(userId, {
+        attributes: { exclude: ["password"] },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: true, msg: "Follower not found" });
+      }
+
+      const isFollowing = await follower.followingUsers.some(
+        (followedUser) => followedUser.id === Number(userId)
+      );
+
+      return res.json({
+        success: true,
+        isFollowing,
+        follower,
+        user,
+      });
+    } catch (err) {
+      console.log("Error checking follow status:", err);
+      return res.status(500).json({ success: false, msg: err });
+    }
+  };
 }
 
 module.exports = FollowsController;
