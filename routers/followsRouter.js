@@ -31,7 +31,11 @@ class FollowsRouter {
     );
 
     router.post("/:userId", this.verifyToken, this.controller.followUser);
-    router.delete("/:userId", this.verifyToken, this.controller.unfollowUser);
+    router.post(
+      "/unfollow/:userId",
+      this.verifyToken,
+      this.controller.unfollowUser
+    );
 
     return router;
   }
