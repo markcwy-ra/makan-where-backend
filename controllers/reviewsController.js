@@ -258,7 +258,9 @@ class ReviewsController extends BaseController {
       existingReview.rating = rating;
       existingReview.title = title;
       existingReview.body = body;
-      existingReview.photoUrl = photoUrl;
+      if (photoUrl) {
+        existingReview.photoUrl = photoUrl;
+      }
       existingReview.recommendedDishes = recommendedDishes;
       await existingReview.save();
 
