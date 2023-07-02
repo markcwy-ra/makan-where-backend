@@ -33,7 +33,7 @@ class UserActivitiesController extends BaseController {
       });
       const followingUsersIds = followingUsers.map((follow) => follow.id);
 
-      // TODO: Get activities of follows
+      // Get activities of follows
       const userActivities = await this.model.findAll({
         where: { userId: { [Op.in]: followingUsersIds } },
         order: [["createdAt", "DESC"]],
@@ -60,39 +60,37 @@ class UserActivitiesController extends BaseController {
 
           switch (userActivity.targetType) {
             case "review": {
-              const review = await this.reviewModel.findOne(
-                { where: { id: userActivity.targetId } },
-                {
-                  include: [
-                    {
-                      model: this.userModel,
-                      attributes: [
-                        "id",
-                        "email",
-                        "username",
-                        "photoUrl",
-                        "lastLogin",
-                      ],
-                    },
-                    {
-                      model: this.restaurantModel,
-                      attributes: [
-                        "id",
-                        "name",
-                        "address",
-                        "placeId",
-                        "locationId",
-                        "description",
-                        "photoUrl",
-                        "googleMapsUrl",
-                        "averageRating",
-                        "priceRangeId",
-                        "statusId",
-                      ],
-                    },
-                  ],
-                }
-              );
+              const review = await this.reviewModel.findOne({
+                where: { id: userActivity.targetId },
+                include: [
+                  {
+                    model: this.userModel,
+                    attributes: [
+                      "id",
+                      "email",
+                      "username",
+                      "photoUrl",
+                      "lastLogin",
+                    ],
+                  },
+                  {
+                    model: this.restaurantModel,
+                    attributes: [
+                      "id",
+                      "name",
+                      "address",
+                      "placeId",
+                      "locationId",
+                      "description",
+                      "photoUrl",
+                      "googleMapsUrl",
+                      "averageRating",
+                      "priceRangeId",
+                      "statusId",
+                    ],
+                  },
+                ],
+              });
 
               if (!review) {
                 console.log(`No review found with id ${userActivity.targetId}`);
@@ -106,39 +104,37 @@ class UserActivitiesController extends BaseController {
               break;
             }
             case "makanlist": {
-              const makanlist = await this.makanlistModel.findOne(
-                { where: { id: userActivity.targetId } },
-                {
-                  include: [
-                    {
-                      model: this.userModel,
-                      attributes: [
-                        "id",
-                        "email",
-                        "username",
-                        "photoUrl",
-                        "lastLogin",
-                      ],
-                    },
-                    {
-                      model: this.restaurantModel,
-                      attributes: [
-                        "id",
-                        "name",
-                        "address",
-                        "placeId",
-                        "locationId",
-                        "description",
-                        "photoUrl",
-                        "googleMapsUrl",
-                        "averageRating",
-                        "priceRangeId",
-                        "statusId",
-                      ],
-                    },
-                  ],
-                }
-              );
+              const makanlist = await this.makanlistModel.findOne({
+                where: { id: userActivity.targetId },
+                include: [
+                  {
+                    model: this.userModel,
+                    attributes: [
+                      "id",
+                      "email",
+                      "username",
+                      "photoUrl",
+                      "lastLogin",
+                    ],
+                  },
+                  {
+                    model: this.restaurantModel,
+                    attributes: [
+                      "id",
+                      "name",
+                      "address",
+                      "placeId",
+                      "locationId",
+                      "description",
+                      "photoUrl",
+                      "googleMapsUrl",
+                      "averageRating",
+                      "priceRangeId",
+                      "statusId",
+                    ],
+                  },
+                ],
+              });
 
               if (!makanlist) {
                 console.log(
@@ -155,18 +151,16 @@ class UserActivitiesController extends BaseController {
             }
             case "makanlistrestaurant": {
               const makanlistRestaurant =
-                await sequelize.models.makanlist_restaurants.findOne(
-                  { where: { id: userActivity.targetId } },
-                  {
-                    attributes: [
-                      "id",
-                      "restaurant_id",
-                      "makanlist_id",
-                      "createdAt",
-                      "updatedAt",
-                    ],
-                  }
-                );
+                await sequelize.models.makanlist_restaurants.findOne({
+                  where: { id: userActivity.targetId },
+                  attributes: [
+                    "id",
+                    "restaurant_id",
+                    "makanlist_id",
+                    "createdAt",
+                    "updatedAt",
+                  ],
+                });
               console.log(
                 "Makanlist restaurant:",
                 JSON.stringify(makanlistRestaurant, null, 2)
@@ -217,39 +211,22 @@ class UserActivitiesController extends BaseController {
               break;
             }
             case "restaurant": {
-              const restaurant = await this.restaurantModel.findOne(
-                { where: { id: userActivity.targetId } },
-                {
-                  include: [
-                    {
-                      model: this.userModel,
-                      attributes: [
-                        "id",
-                        "email",
-                        "username",
-                        "photoUrl",
-                        "lastLogin",
-                      ],
-                    },
-                    {
-                      model: this.restaurantModel,
-                      attributes: [
-                        "id",
-                        "name",
-                        "address",
-                        "placeId",
-                        "locationId",
-                        "description",
-                        "photoUrl",
-                        "googleMapsUrl",
-                        "averageRating",
-                        "priceRangeId",
-                        "statusId",
-                      ],
-                    },
-                  ],
-                }
-              );
+              const restaurant = await this.restaurantModel.findOne({
+                where: { id: userActivity.targetId },
+                include: [
+                  {
+                    model: this.userModel,
+                    attributes: [
+                      "id",
+                      "email",
+                      "username",
+                      "photoUrl",
+                      "lastLogin",
+                    ],
+                    as: "upvotedBy",
+                  },
+                ],
+              });
 
               if (!restaurant) {
                 console.log(
