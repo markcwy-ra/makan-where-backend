@@ -8,7 +8,7 @@ class MapRouter {
   }
 
   routes() {
-    router.get("/", this.controller.getRestaurantsInViewport);
+    router.get("/", this.verifyToken, this.controller.getRestaurantsInViewport);
 
     return router;
   }
