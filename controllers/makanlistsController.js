@@ -1,11 +1,14 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
+const { Op } = require("sequelize");
+const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
 class MakanlistsController extends BaseController {
-  constructor(model, restaurantModel, userModel) {
+  constructor(model, restaurantModel, userModel, userActivityModel) {
     super(model);
     this.restaurantModel = restaurantModel;
     this.userModel = userModel;
+    this.userActivityModel = userActivityModel;
   }
 
   // Get all makanlists
@@ -137,6 +140,21 @@ class MakanlistsController extends BaseController {
         photoUrl,
       });
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "added",
+          targetId: newMakanlist.id,
+          targetType: "makanlist",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      await calculateAndUpdateScore(newMakanlist.id, "makanlist");
+
       return res.json({
         success: true,
         msg: "Makanlist created successfully",
@@ -159,6 +177,7 @@ class MakanlistsController extends BaseController {
       if (!user) {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
+      console.log("user:", user);
 
       const makanlist = await this.model.findByPk(makanlistId);
       if (!makanlist) {
@@ -166,6 +185,7 @@ class MakanlistsController extends BaseController {
           .status(404)
           .json({ error: true, msg: "Makanlist not found" });
       }
+      console.log("makanlist:", makanlist);
 
       const restaurant = await this.restaurantModel.findByPk(restaurantId);
       if (!restaurant) {
@@ -173,8 +193,12 @@ class MakanlistsController extends BaseController {
           .status(404)
           .json({ error: true, msg: "Restaurant not found" });
       }
+      console.log("restaurant:", restaurant);
 
       await makanlist.addRestaurant(restaurant);
+      console.log(
+        `Restaurant id ${restaurantId} added to makanlist id ${makanlistId}`
+      );
 
       // Get makanlist with restaurants
       const updatedMakanlist = await this.model.findOne({
@@ -191,6 +215,48 @@ class MakanlistsController extends BaseController {
           },
         ],
       });
+      console.log(
+        "Updated makanlist:",
+        JSON.stringify(updatedMakanlist, null, 2)
+      );
+
+      const makanlistRestaurant = updatedMakanlist.restaurants[0];
+      console.log("Makanlist restaurant:", makanlistRestaurant);
+      const makanlistRestaurantId =
+        makanlistRestaurant.makanlist_restaurants.id;
+      console.log("Makanlist restaurant id:", makanlistRestaurantId);
+
+      // Log activity
+      try {
+        const userActivity = await this.userActivityModel.create({
+          userId,
+          activityType: "added",
+          targetId: makanlistRestaurantId, // makanlist_restaurant.id
+          targetType: "makanlistrestaurant",
+        });
+        console.log(
+          "User activity created:",
+          JSON.stringify(userActivity, null, 2)
+        );
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      try {
+        console.log(
+          `Calculating and updating score for makanlistId ${makanlistId} and restaurantId ${restaurantId} for makanlist restaurant ${makanlistRestaurantId}`
+        );
+
+        await calculateAndUpdateScore(
+          makanlistRestaurantId,
+          "makanlistrestaurant",
+          makanlistId,
+          restaurantId
+        );
+      } catch (scoreError) {
+        console.log("Failed to update score:", scoreError);
+      }
 
       return res.json({
         success: true,
@@ -246,6 +312,21 @@ class MakanlistsController extends BaseController {
         ],
       });
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "updated",
+          targetId: updatedMakanlist.id,
+          targetType: "makanlist",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      await calculateAndUpdateScore(updatedMakanlist.id, "makanlist");
+
       return res.json({
         success: true,
         msg: "Makanlist successfully updated",
@@ -292,6 +373,34 @@ class MakanlistsController extends BaseController {
           .json({ error: true, msg: "Restaurant not found" });
       }
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "deleted",
+          targetId: makanlistRestaurant.id,
+          targetType: "makanlistrestaurant",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      try {
+        console.log(
+          `Calculating and updating score for makanlistId ${makanlistId} and restaurantId ${restaurantId} for makanlist restaurant ${makanlistRestaurant.id}`
+        );
+
+        await calculateAndUpdateScore(
+          makanlistRestaurant.id,
+          "makanlistrestaurant",
+          makanlistId,
+          restaurantId
+        );
+      } catch (scoreError) {
+        console.log("Failed to update score:", scoreError);
+      }
+
       await makanlist.removeRestaurant(makanlistRestaurant);
 
       const updatedMakanlist = await makanlist.getRestaurants();
@@ -329,6 +438,21 @@ class MakanlistsController extends BaseController {
           .json({ error: true, msg: "Makanlist not found" });
       }
 
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "deleted",
+          targetId: makanlistId,
+          targetType: "makanlist",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      await calculateAndUpdateScore(makanlistId, "makanlist");
+
       // Get and remove upvotes related to makanlist
       const upvotes = await makanlist.getUpvotedBy();
       await makanlist.removeUpvotedBy(upvotes);
@@ -358,6 +482,22 @@ class MakanlistsController extends BaseController {
 
       if (user && makanlist) {
         await user.addUpvotedMakanlists(makanlist);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "upvoted",
+            targetId: makanlistId,
+            targetType: "makanlist",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
+        // Calculate score
+        await calculateAndUpdateScore(makanlistId, "makanlist");
+
         return res.json({
           success: true,
           msg: "Successfully upvoted makanlist",
@@ -382,7 +522,23 @@ class MakanlistsController extends BaseController {
       const makanlist = await this.model.findByPk(makanlistId);
 
       if (user && makanlist) {
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "removed upvote",
+            targetId: makanlistId,
+            targetType: "makanlist",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
+        // Calculate score
+        await (makanlistId, "makanlist");
+
         await user.removeUpvotedMakanlists(makanlist);
+
         return res.json({
           success: true,
           msg: "Successfully removed makanlist upvote",
@@ -406,7 +562,9 @@ class MakanlistsController extends BaseController {
       const makanlist = await this.model.findByPk(makanlistId);
 
       if (makanlist) {
-        const upvotes = await makanlist.getUpvotedBy();
+        const upvotes = await makanlist.getUpvotedBy({
+          attributes: { exclude: ["password"] },
+        });
         return res.json(upvotes);
       } else {
         return res
@@ -446,7 +604,20 @@ class MakanlistsController extends BaseController {
 
     try {
       const user = await this.userModel.findByPk(userId);
-      const upvotedMakanlists = await user.getUpvotedMakanlists();
+      const upvotedMakanlists = await user.getUpvotedMakanlists({
+        include: [
+          {
+            model: this.userModel,
+            attributes: ["id", "username", "photoUrl"],
+          },
+          {
+            model: this.restaurantModel,
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
       return res.json({ upvotedMakanlists });
     } catch (err) {
       console.log("Error fetching user's upvoted makanlists");
@@ -516,7 +687,20 @@ class MakanlistsController extends BaseController {
         return res.status(404).json({ error: true, msg: "User not found" });
       }
 
-      const upvotedMakanlists = await user.getUpvotedMakanlists();
+      const upvotedMakanlists = await user.getUpvotedMakanlists({
+        include: [
+          {
+            model: this.userModel,
+            attributes: ["id", "username", "photoUrl"],
+          },
+          {
+            model: this.restaurantModel,
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
 
       return res.json({
         success: true,
@@ -525,6 +709,45 @@ class MakanlistsController extends BaseController {
     } catch (err) {
       console.log("Error getting upvotes for user's makanlists:", err);
       return res.status(500).json({ success: false, msg: err.message });
+    }
+  };
+
+  // Get search results for makanlists by title
+  searchMakanlistsByTitle = async (req, res) => {
+    const { title } = req.params;
+
+    try {
+      // Find all makanlists with title that match search term
+      const makanlists = await this.model.findAll({
+        where: {
+          title: {
+            [Op.iLike]: `%${title}%`,
+          },
+        },
+        include: [
+          {
+            model: this.userModel,
+            attributes: ["id", "username", "photoUrl"],
+          },
+          {
+            model: this.restaurantModel,
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
+
+      if (makanlists.length === 0) {
+        return res
+          .status(404)
+          .json({ error: true, msg: "No makanlists found" });
+      }
+
+      return res.json(makanlists);
+    } catch (err) {
+      console.log("Error fetching makanlists for search:", err);
+      return res.status(400).json({ error: true, msg: err.message });
     }
   };
 }

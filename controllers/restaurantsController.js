@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
 const axios = require("axios");
+const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
 class RestaurantsController extends BaseController {
   constructor(
@@ -9,7 +10,8 @@ class RestaurantsController extends BaseController {
     openingHourModel,
     priceRangeModel,
     restaurantStatusModel,
-    userModel
+    userModel,
+    userActivityModel
   ) {
     super(model);
     this.locationModel = locationModel;
@@ -17,6 +19,7 @@ class RestaurantsController extends BaseController {
     this.priceRangeModel = priceRangeModel;
     this.restaurantStatusModel = restaurantStatusModel;
     this.userModel = userModel;
+    this.userActivityModel = userActivityModel;
   }
 
   // Get restaurants from search
@@ -112,6 +115,22 @@ class RestaurantsController extends BaseController {
 
       if (user && restaurant) {
         await user.addUpvotedRestaurants(restaurant);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "upvoted",
+            targetId: restaurantId,
+            targetType: "restaurant",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
+        // Calculate score
+        await calculateAndUpdateScore(restaurantId, "restaurant");
+
         return res.json({
           success: true,
           msg: "Successfully upvoted restaurant",
@@ -136,6 +155,21 @@ class RestaurantsController extends BaseController {
       const restaurant = await this.model.findByPk(restaurantId);
 
       if (user && restaurant) {
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "removed upvote",
+            targetId: restaurantId,
+            targetType: "restaurant",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
+        // Calculate score
+        await calculateAndUpdateScore(restaurantId, "restaurant");
+
         await user.removeUpvotedRestaurants(restaurant);
         return res.json({
           success: true,
@@ -334,6 +368,7 @@ class RestaurantsController extends BaseController {
           description: editorial_summary ? editorial_summary.overview : null,
           photoUrl: photoUrl,
           googleMapsUrl: googleMapsUrl,
+          averageRating: 0,
           priceRangeId: priceRangeId,
           statusId: statusId,
         },

@@ -20,6 +20,8 @@ const RestaurantsRouter = require("./routers/restaurantsRouter");
 const FollowsRouter = require("./routers/followsRouter");
 const ReviewsRouter = require("./routers/reviewsRouter");
 const MakanlistsRouter = require("./routers/makanlistsRouter");
+const UserActivitiesRouter = require("./routers/userActivitiesRouter");
+const FeaturedActivitiesRouter = require("./routers/featuredActivitiesRouter");
 
 // Import controllers
 const UsersController = require("./controllers/usersController");
@@ -28,6 +30,8 @@ const RestaurantsController = require("./controllers/restaurantsController");
 const FollowsController = require("./controllers/followsController");
 const ReviewsController = require("./controllers/reviewsController");
 const MakanlistsController = require("./controllers/makanlistsController");
+const UserActivitiesController = require("./controllers/userActivitiesController");
+const FeaturedActivitiesController = require("./controllers/featuredActivitiesController");
 
 // Import db
 const db = require("./db/models/index");
@@ -42,6 +46,8 @@ const {
   restaurantstatus,
   review,
   makanlist,
+  useractivity,
+  featuredactivity,
 } = db;
 
 // Initialise controllers
@@ -51,25 +57,54 @@ const authController = new AuthController(
   refreshtoken,
   passwordresettoken
 );
+const featuredActivitiesController = new FeaturedActivitiesController(
+  featuredactivity,
+  restaurant,
+  review,
+  makanlist,
+  useractivity
+);
+const userActivitiesController = new UserActivitiesController(
+  useractivity,
+  user,
+  restaurant,
+  review,
+  makanlist
+);
 const restaurantsController = new RestaurantsController(
   restaurant,
   location,
   openinghour,
   pricerange,
   restaurantstatus,
-  user
+  user,
+  useractivity
 );
-const followsController = new FollowsController(user);
-const reviewsController = new ReviewsController(review, restaurant, user);
+const followsController = new FollowsController(user, useractivity);
+const reviewsController = new ReviewsController(
+  review,
+  restaurant,
+  user,
+  useractivity
+);
 const makanlistsController = new MakanlistsController(
   makanlist,
   restaurant,
-  user
+  user,
+  useractivity
 );
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController, verifyToken).routes();
 const authRouter = new AuthRouter(authController, verifyToken).routes();
+const featuredActivitiesRouter = new FeaturedActivitiesRouter(
+  featuredActivitiesController,
+  verifyToken
+).routes();
+const userActivitiesRouter = new UserActivitiesRouter(
+  userActivitiesController,
+  verifyToken
+).routes();
 const restaurantsRouter = new RestaurantsRouter(
   restaurantsController,
   verifyToken
@@ -97,6 +132,8 @@ app.use(express.urlencoded({ extended: false }));
 // Use routers
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
+app.use("/feed/featured", featuredActivitiesRouter);
+app.use("/feed/user", userActivitiesRouter);
 app.use("/restaurants", restaurantsRouter);
 app.use("/follows", followsRouter);
 app.use("/reviews", reviewsRouter);

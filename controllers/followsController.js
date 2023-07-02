@@ -2,8 +2,9 @@
 const BaseController = require("./baseController");
 
 class FollowsController extends BaseController {
-  constructor(model) {
+  constructor(model, userActivityModel) {
     super(model);
+    this.userActivityModel = userActivityModel;
   }
 
   // Follow user
@@ -17,6 +18,19 @@ class FollowsController extends BaseController {
 
       if (user && follower) {
         await follower.addFollowingUsers(user);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId: followerId,
+            activityType: "follow",
+            targetId: userId,
+            targetType: "user",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({ success: true, msg: "Successfully followed user" });
       } else {
         return res
@@ -40,6 +54,19 @@ class FollowsController extends BaseController {
 
       if (user && follower) {
         await follower.removeFollowingUsers(user);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId: followerId,
+            activityType: "unfollow",
+            targetId: userId,
+            targetType: "user",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
         return res.json({ success: true, msg: "Successfully unfollowed user" });
       } else {
         return res
@@ -139,6 +166,50 @@ class FollowsController extends BaseController {
     } catch (err) {
       console.log("Error counting user's follows:", err);
       return res.status(500).json({ error: true, msg: err });
+    }
+  };
+
+  // Check if user is following user
+  getUserFollowStatus = async (req, res) => {
+    const { userId, followerId } = req.params;
+
+    try {
+      const follower = await this.model.findByPk(followerId, {
+        attributes: { exclude: ["password"] },
+        include: [
+          {
+            model: this.model,
+            as: "followingUsers",
+            through: { attributes: [] },
+          },
+        ],
+      });
+
+      if (!follower) {
+        return res.status(404).json({ error: true, msg: "Follower not found" });
+      }
+
+      const user = await this.model.findByPk(userId, {
+        attributes: { exclude: ["password"] },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: true, msg: "Follower not found" });
+      }
+
+      const isFollowing = await follower.followingUsers.some(
+        (followedUser) => followedUser.id === Number(userId)
+      );
+
+      return res.json({
+        success: true,
+        isFollowing,
+        follower,
+        user,
+      });
+    } catch (err) {
+      console.log("Error checking follow status:", err);
+      return res.status(500).json({ success: false, msg: err });
     }
   };
 }

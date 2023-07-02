@@ -37,6 +37,12 @@ class FollowsRouter {
       this.controller.unfollowUser
     );
 
+    router.get(
+      "/:followerId/follow/:userId",
+      this.verifyToken,
+      this.controller.getUserFollowStatus
+    );
+
     return router;
   }
 }

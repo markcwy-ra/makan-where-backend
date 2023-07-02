@@ -1,11 +1,14 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
+const { fn, col } = require("sequelize");
+const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
 class ReviewsController extends BaseController {
-  constructor(model, restaurantModel, userModel) {
+  constructor(model, restaurantModel, userModel, userActivityModel) {
     super(model);
     this.restaurantModel = restaurantModel;
     this.userModel = userModel;
+    this.userActivityModel = userActivityModel;
   }
 
   // Get all reviews for restaurant
@@ -189,6 +192,28 @@ class ReviewsController extends BaseController {
         recommendedDishes,
       });
 
+      // Calculate average rating and update restaurant entry
+      const averageRating = await this.calculateAverageRating(restaurantId);
+      await this.restaurantModel.update(
+        { averageRating: averageRating },
+        { where: { id: restaurantId } }
+      );
+
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "added",
+          targetId: newReview.id,
+          targetType: "review",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      await calculateAndUpdateScore(newReview.id, "review");
+
       // Eager load user and restaurant data
       const reviewWithDetails = await this.model.findOne({
         where: { id: newReview.id },
@@ -236,6 +261,30 @@ class ReviewsController extends BaseController {
       existingReview.photoUrl = photoUrl;
       existingReview.recommendedDishes = recommendedDishes;
       await existingReview.save();
+
+      // Calculate average rating and update restaurant entry
+      const averageRating = await this.calculateAverageRating(
+        existingReview.restaurantId
+      );
+      await this.restaurantModel.update(
+        { averageRating: averageRating },
+        { where: { id: existingReview.restaurantId } }
+      );
+
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "updated",
+          targetId: existingReview.id,
+          targetType: "review",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      await calculateAndUpdateScore(existingReview.id, "review");
 
       // Get updated review
       const updatedReview = await this.model.findOne({
@@ -286,11 +335,37 @@ class ReviewsController extends BaseController {
         return res.status(404).json({ error: true, msg: "Review not found" });
       }
 
+      // Get restaurantId
+      const restaurantId = existingReview.restaurantId;
+
+      // Log activity
+      try {
+        await this.userActivityModel.create({
+          userId,
+          activityType: "deleted",
+          targetId: existingReview.id,
+          targetType: "review",
+        });
+      } catch (activityError) {
+        console.log("Failed to log activity:", activityError);
+      }
+
+      // Calculate score
+      await calculateAndUpdateScore(existingReview.id, "review");
+
       // Fetch and delete all upvotes associated with review
       await existingReview.removeUpvotedBy(existingReview.upvotedBy);
 
       // Delete review
       await existingReview.destroy();
+
+      // Calculate and update average rating
+      const averageRating = await this.calculateAverageRating(restaurantId);
+      const averageRatingToSet = averageRating || 0; // If averageRating is null, set to 0
+      await this.restaurantModel.update(
+        { averageRating: averageRatingToSet },
+        { where: { id: restaurantId } }
+      );
 
       return res.json({ success: true, msg: "Review deleted successfully" });
     } catch (err) {
@@ -310,6 +385,22 @@ class ReviewsController extends BaseController {
 
       if (user && review) {
         await user.addUpvotedReviews(review);
+
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "upvoted",
+            targetId: reviewId,
+            targetType: "review",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
+        // Calculate score
+        await calculateAndUpdateScore(reviewId, "review");
+
         return res.json({ success: true, msg: "Successfully upvoted review" });
       } else {
         return res
@@ -331,6 +422,21 @@ class ReviewsController extends BaseController {
       const review = await this.model.findByPk(reviewId);
 
       if (user && review) {
+        // Log activity
+        try {
+          await this.userActivityModel.create({
+            userId,
+            activityType: "removed upvote",
+            targetId: reviewId,
+            targetType: "review",
+          });
+        } catch (activityError) {
+          console.log("Failed to log activity:", activityError);
+        }
+
+        // Calculate score
+        await calculateAndUpdateScore(reviewId, "review");
+
         await user.removeUpvotedReviews(review);
         return res.json({
           success: true,
@@ -444,6 +550,17 @@ class ReviewsController extends BaseController {
       console.log("Error checking upvote status for review:", err);
       return res.status(500).json({ success: false, msg: err });
     }
+  };
+
+  // Calculate average rating of restaurant
+  calculateAverageRating = async (restaurantId) => {
+    const result = await this.model.findOne({
+      attributes: [[fn("AVG", col("rating")), "averageRating"]],
+      where: { restaurantId: restaurantId },
+      raw: true,
+    });
+
+    return result.averageRating ? parseFloat(result.averageRating) : 0;
   };
 }
 

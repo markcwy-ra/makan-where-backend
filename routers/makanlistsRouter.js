@@ -92,6 +92,12 @@ class MakanlistsRouter {
       this.controller.getOneMakanlist
     );
 
+    router.get(
+      "/search/:title",
+      this.verifyToken,
+      this.controller.searchMakanlistsByTitle
+    );
+
     return router;
   }
 }

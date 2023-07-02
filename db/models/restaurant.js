@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.makanlist, {
         through: "makanlist_restaurants",
         foreignKey: "restaurant_id",
+        otherKey: "makanlist_id",
       });
       this.belongsToMany(models.cuisine, {
         through: "restaurant_cuisines",
@@ -79,6 +80,7 @@ module.exports = (sequelize, DataTypes) => {
       averageRating: {
         type: DataTypes.FLOAT,
         field: "average_rating",
+        defaultValue: 0,
         validate: {
           min: 0,
           max: 5,
