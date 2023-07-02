@@ -58,7 +58,11 @@ const authController = new AuthController(
   passwordresettoken
 );
 const featuredActivitiesController = new FeaturedActivitiesController(
-  featuredactivity
+  featuredactivity,
+  restaurant,
+  review,
+  makanlist,
+  useractivity
 );
 const userActivitiesController = new UserActivitiesController(
   useractivity,

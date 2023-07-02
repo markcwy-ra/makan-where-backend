@@ -155,8 +155,8 @@ class UserActivitiesController extends BaseController {
             }
             case "makanlistrestaurant": {
               const makanlistRestaurant =
-                await sequelize.models.makanlist_restaurants.findByPk(
-                  userActivity.targetId,
+                await sequelize.models.makanlist_restaurants.findOne(
+                  { where: { id: userActivity.targetId } },
                   {
                     attributes: [
                       "id",
@@ -167,7 +167,10 @@ class UserActivitiesController extends BaseController {
                     ],
                   }
                 );
-              console.log("Makanlist restaurant:", makanlistRestaurant);
+              console.log(
+                "Makanlist restaurant:",
+                JSON.stringify(makanlistRestaurant, null, 2)
+              );
 
               if (!makanlistRestaurant) {
                 console.log(
@@ -183,7 +186,8 @@ class UserActivitiesController extends BaseController {
               const makanlist = await this.makanlistModel.findByPk(
                 makanlistRestaurant.makanlist_id
               );
-              console.log("Makanlist:", makanlist);
+              console.log("Makanlist:", JSON.stringify(makanlist, null, 2));
+
               if (!makanlist) {
                 console.log(
                   `No makanlist found with id ${makanlistRestaurant.makanlist_id}`
@@ -198,7 +202,7 @@ class UserActivitiesController extends BaseController {
               const restaurant = await this.restaurantModel.findByPk(
                 makanlistRestaurant.restaurant_id
               );
-              console.log("Restaurant:", restaurant);
+              console.log("Restaurant:", JSON.stringify(restaurant, null, 2));
               if (!restaurant) {
                 console.log(
                   `No restaurant found with id ${makanlistRestaurant.restaurant_id}`

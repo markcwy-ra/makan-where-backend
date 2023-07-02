@@ -21,10 +21,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         field: "score",
         defaultValue: 0.0,
-        validate: {
-          min: 0,
-          max: 5,
-        },
       },
       userActivityCount: {
         type: DataTypes.INTEGER,

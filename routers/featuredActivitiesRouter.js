@@ -8,6 +8,8 @@ class FeaturedActivitiesRouter {
   }
 
   routes() {
+    router.get("/", this.verifyToken, this.controller.getFeaturedFeed);
+
     return router;
   }
 }

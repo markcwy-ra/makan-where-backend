@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
 const { fn, col } = require("sequelize");
+const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
 class ReviewsController extends BaseController {
   constructor(model, restaurantModel, userModel, userActivityModel) {
@@ -210,6 +211,9 @@ class ReviewsController extends BaseController {
         console.log("Failed to log activity:", activityError);
       }
 
+      // Calculate score
+      await calculateAndUpdateScore(newReview.id, "review");
+
       // Eager load user and restaurant data
       const reviewWithDetails = await this.model.findOne({
         where: { id: newReview.id },
@@ -279,6 +283,9 @@ class ReviewsController extends BaseController {
         console.log("Failed to log activity:", activityError);
       }
 
+      // Calculate score
+      await calculateAndUpdateScore(existingReview.id, "review");
+
       // Get updated review
       const updatedReview = await this.model.findOne({
         where: { id: reviewId },
@@ -343,6 +350,9 @@ class ReviewsController extends BaseController {
         console.log("Failed to log activity:", activityError);
       }
 
+      // Calculate score
+      await calculateAndUpdateScore(existingReview.id, "review");
+
       // Fetch and delete all upvotes associated with review
       await existingReview.removeUpvotedBy(existingReview.upvotedBy);
 
@@ -388,6 +398,9 @@ class ReviewsController extends BaseController {
           console.log("Failed to log activity:", activityError);
         }
 
+        // Calculate score
+        await calculateAndUpdateScore(reviewId, "review");
+
         return res.json({ success: true, msg: "Successfully upvoted review" });
       } else {
         return res
@@ -420,6 +433,9 @@ class ReviewsController extends BaseController {
         } catch (activityError) {
           console.log("Failed to log activity:", activityError);
         }
+
+        // Calculate score
+        await calculateAndUpdateScore(reviewId, "review");
 
         await user.removeUpvotedReviews(review);
         return res.json({

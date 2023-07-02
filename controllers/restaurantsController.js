@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
 const axios = require("axios");
+const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
 class RestaurantsController extends BaseController {
   constructor(
@@ -127,6 +128,9 @@ class RestaurantsController extends BaseController {
           console.log("Failed to log activity:", activityError);
         }
 
+        // Calculate score
+        await calculateAndUpdateScore(restaurantId, "restaurant");
+
         return res.json({
           success: true,
           msg: "Successfully upvoted restaurant",
@@ -162,6 +166,9 @@ class RestaurantsController extends BaseController {
         } catch (activityError) {
           console.log("Failed to log activity:", activityError);
         }
+
+        // Calculate score
+        await calculateAndUpdateScore(restaurantId, "restaurant");
 
         await user.removeUpvotedRestaurants(restaurant);
         return res.json({

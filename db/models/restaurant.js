@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.makanlist, {
         through: "makanlist_restaurants",
         foreignKey: "restaurant_id",
-        otherKey: "id",
+        otherKey: "makanlist_id",
       });
       this.belongsToMany(models.cuisine, {
         through: "restaurant_cuisines",
