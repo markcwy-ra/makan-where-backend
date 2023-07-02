@@ -22,6 +22,7 @@ const ReviewsRouter = require("./routers/reviewsRouter");
 const MakanlistsRouter = require("./routers/makanlistsRouter");
 const UserActivitiesRouter = require("./routers/userActivitiesRouter");
 const FeaturedActivitiesRouter = require("./routers/featuredActivitiesRouter");
+const MapRouter = require("./routers/mapRouter");
 
 // Import controllers
 const UsersController = require("./controllers/usersController");
@@ -32,6 +33,7 @@ const ReviewsController = require("./controllers/reviewsController");
 const MakanlistsController = require("./controllers/makanlistsController");
 const UserActivitiesController = require("./controllers/userActivitiesController");
 const FeaturedActivitiesController = require("./controllers/featuredActivitiesController");
+const MapController = require("./controllers/mapController");
 
 // Import db
 const db = require("./db/models/index");
@@ -93,6 +95,7 @@ const makanlistsController = new MakanlistsController(
   user,
   useractivity
 );
+const mapController = new MapController(location, restaurant);
 
 // Initialise routers
 const usersRouter = new UsersRouter(usersController, verifyToken).routes();
@@ -121,6 +124,7 @@ const makanlistsRouter = new MakanlistsRouter(
   makanlistsController,
   verifyToken
 ).routes();
+const mapRouter = new MapRouter(mapController, verifyToken).routes();
 
 // Enable CORS
 app.use(cors(corsOptions));
@@ -138,6 +142,7 @@ app.use("/restaurants", restaurantsRouter);
 app.use("/follows", followsRouter);
 app.use("/reviews", reviewsRouter);
 app.use("/makanlists", makanlistsRouter);
+app.use("/map", mapRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");
