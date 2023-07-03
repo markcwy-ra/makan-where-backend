@@ -74,6 +74,17 @@ class UserActivitiesController extends BaseController {
                     ],
                   },
                   {
+                    model: this.userModel,
+                    attributes: [
+                      "id",
+                      "email",
+                      "username",
+                      "photoUrl",
+                      "lastLogin",
+                    ],
+                    as: "upvotedBy",
+                  },
+                  {
                     model: this.restaurantModel,
                     attributes: [
                       "id",
@@ -116,6 +127,17 @@ class UserActivitiesController extends BaseController {
                       "photoUrl",
                       "lastLogin",
                     ],
+                  },
+                  {
+                    model: this.userModel,
+                    attributes: [
+                      "id",
+                      "email",
+                      "username",
+                      "photoUrl",
+                      "lastLogin",
+                    ],
+                    as: "upvotedBy",
                   },
                   {
                     model: this.restaurantModel,
