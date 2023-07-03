@@ -32,6 +32,38 @@ class MakanlistsController extends BaseController {
     }
   };
 
+  // Get all makanlists that include a specific restaurant
+  getAllMakanlistsForRestaurant = async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+      const makanlists = await this.model.findAll({
+        include: [
+          {
+            model: this.restaurantModel,
+            where: { id: restaurantId },
+          },
+          {
+            model: this.userModel,
+            attributes: ["id", "email", "username", "photoUrl"],
+          },
+        ],
+      });
+
+      if (!makanlists || makanlists.length === 0) {
+        return res.status(404).json({
+          error: true,
+          msg: "No makanlists found for this restaurant",
+        });
+      }
+
+      return res.json(makanlists);
+    } catch (err) {
+      console.log("Error fetching makanlists for restaurant:", err);
+      return res.status(500).json({ error: true, msg: err.message });
+    }
+  };
+
   // Get all of user's makanlists
   getUserMakanlists = async (req, res) => {
     const { userId } = req.params;
