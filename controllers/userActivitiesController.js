@@ -14,14 +14,14 @@ class UserActivitiesController extends BaseController {
 
   getUserFeed = async (req, res) => {
     const { userId } = req.params;
-    // let { page, limit } = req.query;
+    let { page, limit } = req.query;
 
     // Set default values for page and limit
-    // page = isNaN(page) || page <= 0 ? 1 : parseInt(page);
-    // limit = isNaN(limit) || limit <= 0 ? 1 : parseInt(limit);
+    page = isNaN(page) || page <= 0 ? 1 : parseInt(page); // Default to page 1
+    limit = isNaN(limit) || limit <= 0 ? 10 : parseInt(limit); // Limit to 10
 
     // Calculate offset
-    // const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
     try {
       // Find user
@@ -37,8 +37,8 @@ class UserActivitiesController extends BaseController {
       const userActivities = await this.model.findAll({
         where: { userId: { [Op.in]: followingUsersIds } },
         order: [["createdAt", "DESC"]],
-        // limit: limit,
-        // offset: offset,
+        limit: limit,
+        offset: offset,
         include: [
           {
             model: this.userModel,
