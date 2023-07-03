@@ -42,6 +42,7 @@ class MakanlistsController extends BaseController {
           {
             model: this.restaurantModel,
             where: { id: restaurantId },
+            attributes: [],
           },
           {
             model: this.userModel,
