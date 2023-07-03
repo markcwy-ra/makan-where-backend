@@ -503,6 +503,10 @@ class ReviewsController extends BaseController {
           {
             model: this.restaurantModel,
           },
+          {
+            model: this.userModel,
+            attributes: ["id", "email", "username", "photoUrl"],
+          },
         ],
       });
       return res.json({ upvotedReviews });
