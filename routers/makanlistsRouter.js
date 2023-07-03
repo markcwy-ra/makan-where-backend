@@ -55,7 +55,7 @@ class MakanlistsRouter {
       this.controller.upvoteMakanlist
     );
     router.delete(
-      "/:makanlistId/upvote/:userId",
+      "/:makanlistId/upvote/remove/:userId",
       this.verifyToken,
       this.controller.removeMakanlistUpvote
     );
