@@ -498,7 +498,13 @@ class ReviewsController extends BaseController {
 
     try {
       const user = await this.userModel.findByPk(userId);
-      const upvotedReviews = await user.getUpvotedReviews();
+      const upvotedReviews = await user.getUpvotedReviews({
+        include: [
+          {
+            model: this.restaurantModel,
+          },
+        ],
+      });
       return res.json({ upvotedReviews });
     } catch (err) {
       console.log("Error fetching user's upvoted reviews");

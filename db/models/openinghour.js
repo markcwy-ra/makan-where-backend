@@ -41,24 +41,10 @@ module.exports = (sequelize, DataTypes) => {
       openingTime: {
         type: DataTypes.TIME,
         field: "opening_time",
-        validate: {
-          isAfterClosing(value) {
-            if (this.closingTime && value >= this.closingTime) {
-              throw new Error("Opening time must be before closing time");
-            }
-          },
-        },
       },
       closingTime: {
         type: DataTypes.TIME,
         field: "closing_time",
-        validate: {
-          isBeforeOpening(value) {
-            if (this.openingTime && value <= this.openingTime) {
-              throw new Error("Closing time must be after opening time");
-            }
-          },
-        },
       },
     },
     {
