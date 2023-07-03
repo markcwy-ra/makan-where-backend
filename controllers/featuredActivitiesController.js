@@ -1,96 +1,160 @@
 /* eslint-disable no-unused-vars */
-const { sequelize } = require("../db/models");
 const BaseController = require("./baseController");
-const { calculateAndUpdateScore } = require("../utils/scoreUtils");
+const { Op } = require("sequelize");
 
 class FeaturedActivitiesController extends BaseController {
-  constructor(
-    model,
-    restaurantModel,
-    reviewModel,
-    makanlistModel,
-    userActivityModel
-  ) {
+  constructor(model, restaurantModel, reviewModel, makanlistModel, userModel) {
     super(model);
     this.restaurantModel = restaurantModel;
     this.reviewModel = reviewModel;
     this.makanlistModel = makanlistModel;
-    this.userActivityModel = userActivityModel;
+    this.userModel = userModel;
   }
 
-  // Get feed
   getFeaturedFeed = async (req, res) => {
     try {
-      // Get top restaurant activities
-      const featuredRestaurantActivities = await this.model.findAll({
+      // Load featured activities excluding "makanlistrestaurant" type
+      const featuredActivities = await this.model.findAll({
         where: {
-          targetType: "restaurant",
+          targetType: {
+            [Op.not]: "makanlistrestaurant",
+          },
         },
         order: [
           ["score", "DESC"],
           ["userActivityCount", "DESC"],
+          ["updatedAt", "DESC"],
         ],
-        limit: 10,
       });
 
-      // Get top makanlist activities
-      const featuredMakanlistActivities = await this.model.findAll({
-        where: {
-          targetType: "makanlist",
+      // Group activities by target type
+      const activitiesByType = featuredActivities.reduce((groups, activity) => {
+        const group = groups[activity.targetType] || [];
+        group.push(activity);
+        groups[activity.targetType] = group;
+        return groups;
+      }, {});
+
+      // Load related targets for each group
+      const loaders = {
+        restaurant: this.restaurantModel,
+        review: this.reviewModel,
+        makanlist: this.makanlistModel,
+      };
+
+      // Define the associated loaders for eager loading
+      const associatedLoaders = {
+        makanlist: {
+          include: [
+            {
+              model: this.userModel,
+              attributes: ["id", "email", "username", "photoUrl", "lastLogin"],
+            },
+            {
+              model: this.restaurantModel,
+              attributes: [
+                "id",
+                "name",
+                "address",
+                "placeId",
+                "locationId",
+                "description",
+                "photoUrl",
+                "googleMapsUrl",
+                "averageRating",
+                "priceRangeId",
+                "statusId",
+              ],
+            },
+          ],
         },
-        order: [
-          ["score", "DESC"],
-          ["userActivityCount", "DESC"],
-        ],
-        limit: 10,
-      });
-
-      // Get top review activities
-      const featuredReviewActivities = await this.model.findAll({
-        where: {
-          targetType: "review",
+        restaurant: {
+          include: [
+            {
+              model: this.makanlistModel,
+            },
+          ],
         },
-        order: [
-          ["score", "DESC"],
-          ["userActivityCount", "DESC"],
-        ],
-        limit: 10,
-      });
-
-      // const featuredActivities = await this.model.findAll({
-      //   order: [["score", "DESC"]],
-      //   limit: 10,
-      // });
-
-      // Get target IDs
-      // const targetIds = featuredActivities.map((activity) => activity.targetId);
-
-      // Get restaurant IDs
-      const featuredRestaurants = await this.restaurantModel.findAll({
-        where: {
-          id: featuredRestaurantActivities.map((activity) => activity.targetId),
+        review: {
+          include: [
+            {
+              model: this.userModel,
+              attributes: ["id", "email", "username", "photoUrl", "lastLogin"],
+            },
+            {
+              model: this.restaurantModel,
+              attributes: [
+                "id",
+                "name",
+                "address",
+                "placeId",
+                "locationId",
+                "description",
+                "photoUrl",
+                "googleMapsUrl",
+                "averageRating",
+                "priceRangeId",
+                "statusId",
+              ],
+            },
+          ],
         },
+      };
+
+      const loadedActivities = [];
+      for (const [type, activities] of Object.entries(activitiesByType)) {
+        const loader = loaders[type];
+        if (!loader) {
+          console.log(`No loader for target type ${type}`);
+          continue;
+        }
+
+        const associatedLoader = associatedLoaders[type];
+        const queryOptions = {
+          where: {
+            id: activities.map((activity) => activity.targetId),
+          },
+        };
+
+        if (associatedLoader) {
+          queryOptions.include = associatedLoader.include;
+        }
+
+        const targets = await loader.findAll(queryOptions);
+
+        // Attach targets to activities and only include those where target exists
+        for (const activity of activities) {
+          const target = targets.find(
+            (target) => target.id === activity.targetId
+          );
+          if (!target) {
+            console.log(
+              `No target found for ${type} activity with ID ${activity.targetId}`
+            );
+            continue;
+          }
+          activity.setDataValue("target", target);
+          loadedActivities.push(activity);
+        }
+      }
+
+      // Sort all loaded activities by score, then userActivityCount, then creation time
+      loadedActivities.sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        if (b.userActivityCount !== a.userActivityCount) {
+          return b.userActivityCount - a.userActivityCount;
+        }
+        return b.updatedAt - a.updatedAt;
       });
 
-      // Get makanlist IDs
-      const featuredMakanlists = await this.makanlistModel.findAll({
-        where: {
-          id: featuredMakanlistActivities.map((activity) => activity.targetId),
-        },
-      });
-
-      // Get review IDs
-      const featuredReviews = await this.reviewModel.findAll({
-        where: {
-          id: featuredReviewActivities.map((activity) => activity.targetId),
-        },
-      });
+      // Limit to top 15
+      const topActivities = loadedActivities.slice(0, 15);
 
       return res.json({
         success: true,
-        featuredRestaurants,
-        featuredMakanlists,
-        featuredReviews,
+        topActivities,
       });
     } catch (err) {
       console.log("Error getting featured feed:", err);

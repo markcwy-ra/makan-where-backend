@@ -64,7 +64,7 @@ const featuredActivitiesController = new FeaturedActivitiesController(
   restaurant,
   review,
   makanlist,
-  useractivity
+  user
 );
 const userActivitiesController = new UserActivitiesController(
   useractivity,
