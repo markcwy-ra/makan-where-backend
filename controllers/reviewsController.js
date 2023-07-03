@@ -311,8 +311,7 @@ class ReviewsController extends BaseController {
 
   // Delete review for restaurant
   deleteReview = async (req, res) => {
-    const { reviewId } = req.params;
-    const { userId } = req.body;
+    const { userId, reviewId } = req.params;
 
     try {
       const user = await this.userModel.findByPk(userId);
