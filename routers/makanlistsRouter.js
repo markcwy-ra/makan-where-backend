@@ -9,6 +9,12 @@ class MakanlistsRouter {
 
   routes() {
     router.get("/", this.verifyToken, this.controller.getAllMakanlists);
+    router.get(
+      "/:restaurantId",
+      this.verifyToken,
+      this.controller.getAllMakanlistsForRestaurant
+    );
+
     router.post("/", this.verifyToken, this.controller.createMakanlist);
 
     router.get(
@@ -45,7 +51,6 @@ class MakanlistsRouter {
 
     router.get(
       "/:makanlistId/upvote/:userId",
-      this.verifyToken,
       this.controller.getUserUpvoteStatusForMakanlist
     );
 
