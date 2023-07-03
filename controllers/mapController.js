@@ -39,6 +39,11 @@ class MapController extends BaseController {
             as: "location",
           },
         ],
+        limit: 15,
+        order: [
+          ["averageRating", "DESC"],
+          ["name", "ASC"],
+        ],
       });
 
       return res.status(200).json({ success: true, restaurants });
