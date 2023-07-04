@@ -4,6 +4,23 @@ const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
+//------------ IMPORT CONSTANTS -----------//
+const {
+  CREATED,
+  BAD_REQUEST,
+  FORBIDDEN,
+  NOT_FOUND,
+} = require("../constants/statusCodes");
+
+const {
+  WRONG_PASSWORD,
+  USER_RETRIEVED_SUCCESS,
+  USER_NOT_FOUND,
+  USER_DELETED_SUCCESS,
+  USERS_NOT_FOUND,
+} = require("../constants/messages");
+//------------------------------------------//
+
 class UsersController extends BaseController {
   constructor(model, refreshTokenModel) {
     super(model);
@@ -18,9 +35,9 @@ class UsersController extends BaseController {
         where: { token: token },
       });
       const user = await this.model.findByPk(tokenId.userId);
-      return res.status(201).json({
+      return res.status(CREATED).json({
         success: true,
-        msg: "User data retrieved.",
+        msg: USER_RETRIEVED_SUCCESS,
         data: {
           username: user.username,
           id: user.id,
@@ -29,7 +46,7 @@ class UsersController extends BaseController {
         },
       });
     } catch (err) {
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -42,12 +59,12 @@ class UsersController extends BaseController {
       const user = await this.model.findByPk(userId);
 
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
-      return res.status(201).json({
+      return res.status(CREATED).json({
         success: true,
-        msg: "User data retrieved.",
+        msg: USER_DATA_RETRIEVED,
         data: {
           username: user.username,
           id: user.id,
@@ -56,7 +73,7 @@ class UsersController extends BaseController {
         },
       });
     } catch (err) {
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -71,7 +88,7 @@ class UsersController extends BaseController {
       const user = await this.model.findByPk(userId);
 
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       let hashedPassword = null;
@@ -81,9 +98,9 @@ class UsersController extends BaseController {
 
         // Check if current password is correct
         if (!compare) {
-          return res.status(403).json({
+          return res.status(FORBIDDEN).json({
             success: false,
-            msg: "Current password entered is wrong!",
+            msg: WRONG_PASSWORD,
           });
         }
         // Create new password
@@ -116,7 +133,7 @@ class UsersController extends BaseController {
       });
     } catch (err) {
       console.log("Error updating user profile:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 
@@ -128,7 +145,7 @@ class UsersController extends BaseController {
       const user = await this.model.findByPk(userId);
 
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const deletedUser = await this.model.destroy({
@@ -139,12 +156,12 @@ class UsersController extends BaseController {
 
       return res.json({
         success: true,
-        msg: "User deleted successfully",
+        msg: USER_DELETED_SUCCESS,
         user: deletedUser.userId,
       });
     } catch (err) {
       console.log("Error deleting user:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -163,7 +180,9 @@ class UsersController extends BaseController {
       });
 
       if (users.length === 0) {
-        return res.status(404).json({ error: true, msg: "No users found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USERS_NOT_FOUND });
       }
 
       const usersCleaned = users.map((user) => ({
@@ -174,7 +193,7 @@ class UsersController extends BaseController {
 
       return res.json(usersCleaned);
     } catch (err) {
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 }

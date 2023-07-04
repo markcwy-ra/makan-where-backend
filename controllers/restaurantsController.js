@@ -3,6 +3,25 @@ const BaseController = require("./baseController");
 const axios = require("axios");
 const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
+//------------ IMPORT CONSTANTS ------------//
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  SERVER_ERROR,
+} = require("../constants/statusCodes");
+
+const {
+  USER_NOT_FOUND,
+  RESTAURANT_NOT_FOUND,
+  USER_OR_RESTAURANT_NOT_FOUND,
+  RESTAURANT_UPVOTE_REMOVED_SUCCESS,
+  RESTAURANT_UPVOTE_SUCCESS,
+  RESTAURANT_RETRIEVED_SUCCESS,
+  RESTAURANT_SEARCH_ERROR,
+  RESTAURANT_SEARCH_SUCCESS,
+} = require("../constants/messages");
+//------------------------------------------//
+
 class RestaurantsController extends BaseController {
   constructor(
     model,
@@ -68,13 +87,13 @@ class RestaurantsController extends BaseController {
 
     if (uniqueResults.length === 0) {
       return res
-        .status(500)
-        .json({ success: false, msg: "Error retrieving places" });
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: RESTAURANT_SEARCH_ERROR });
     }
 
     return res.json({
       success: true,
-      msg: "Successfully retrieved search results",
+      msg: RESTAURANT_SEARCH_SUCCESS,
       data: uniqueResults,
     });
   };
@@ -118,7 +137,7 @@ class RestaurantsController extends BaseController {
 
     return res.json({
       success: true,
-      msg: "Successfully retrieved restaurant details",
+      msg: RESTAURANT_RETRIEVED_SUCCESS,
       data: restaurant,
     });
   };
@@ -152,16 +171,16 @@ class RestaurantsController extends BaseController {
 
         return res.json({
           success: true,
-          msg: "Successfully upvoted restaurant",
+          msg: RESTAURANT_UPVOTE_SUCCESS,
         });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "User or restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_OR_RESTAURANT_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error adding upvote:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -192,16 +211,16 @@ class RestaurantsController extends BaseController {
         await user.removeUpvotedRestaurants(restaurant);
         return res.json({
           success: true,
-          msg: "Successfully removed restaurant upvote",
+          msg: RESTAURANT_UPVOTE_REMOVED_SUCCESS,
         });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "User or restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_OR_RESTAURANT_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error removing upvote:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -217,12 +236,12 @@ class RestaurantsController extends BaseController {
         return res.json(upvotes);
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error getting upvotes:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -236,7 +255,7 @@ class RestaurantsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting total upvotes for restaurant");
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -250,7 +269,7 @@ class RestaurantsController extends BaseController {
       return res.json(upvotes);
     } catch (err) {
       console.log("Error counting restaurants upvoted by user");
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -264,7 +283,7 @@ class RestaurantsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting restaurants upvoted by user");
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -276,14 +295,14 @@ class RestaurantsController extends BaseController {
         attributes: { exclude: ["password"] },
       });
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const restaurant = await this.model.findByPk(restaurantId);
       if (!restaurant) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
 
       const upvotedRestaurants = await user.getUpvotedRestaurants();
@@ -299,7 +318,7 @@ class RestaurantsController extends BaseController {
       });
     } catch (err) {
       console.log("Error checking upvote status:", err);
-      return res.status(500).json({ success: false, msg: err });
+      return res.status(SERVER_ERROR).json({ success: false, msg: err });
     }
   };
 

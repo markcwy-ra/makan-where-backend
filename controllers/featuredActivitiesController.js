@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const BaseController = require("./baseController");
 const { Op } = require("sequelize");
+const { SERVER_ERROR } = require("../constants/statusCodes");
 
 class FeaturedActivitiesController extends BaseController {
   constructor(model, restaurantModel, reviewModel, makanlistModel, userModel) {
@@ -158,7 +159,9 @@ class FeaturedActivitiesController extends BaseController {
       });
     } catch (err) {
       console.log("Error getting featured feed:", err);
-      return res.status(500).json({ success: false, msg: err.message });
+      return res
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: err.message });
     }
   };
 }
