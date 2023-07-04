@@ -25,7 +25,7 @@ class RestaurantsController extends BaseController {
   // Get restaurants from search
   getRestaurants = async (req, res) => {
     const { searchTerm, priceLevel, lat, lng } = req.query;
-    const types = ["restaurant", "food", "cafe", "bakery", "bar"];
+    const types = ["restaurant", "cafe", "bakery", "bar"];
     let allResults = [];
     console.log("Types:", types);
 
@@ -59,7 +59,14 @@ class RestaurantsController extends BaseController {
       }
     }
 
-    if (allResults.length === 0) {
+    // Create new array from set of unique place_ids
+    const uniqueResults = Array.from(
+      new Set(allResults.map((a) => a.place_id))
+    ).map((place_id) => {
+      return allResults.find((a) => a.place_id === place_id);
+    });
+
+    if (uniqueResults.length === 0) {
       return res
         .status(500)
         .json({ success: false, msg: "Error retrieving places" });
@@ -68,7 +75,7 @@ class RestaurantsController extends BaseController {
     return res.json({
       success: true,
       msg: "Successfully retrieved search results",
-      data: allResults,
+      data: uniqueResults,
     });
   };
 
@@ -312,7 +319,7 @@ class RestaurantsController extends BaseController {
       } = restaurantDataFromAPI;
       const { lat, lng } = geometry.location;
       const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${place_id}`;
-      const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photos[0].photo_reference}&key=${process.env.GMAPS_API_KEY}`;
+      const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photoreference=${photos[0].photo_reference}&key=${process.env.GMAPS_API_KEY}`;
 
       let city, state, country;
       for (let i = 0; i < address_components.length; i++) {
