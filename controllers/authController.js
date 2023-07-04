@@ -7,6 +7,43 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const saltRounds = 10;
 
+//------------ IMPORT CONSTANTS ------------//
+const {
+  OK,
+  CREATED,
+  BAD_REQUEST,
+  UNAUTHORIZED,
+  FORBIDDEN,
+  NOT_FOUND,
+  SERVER_ERROR,
+} = require("../constants/statusCodes");
+
+const {
+  MISSING_FIELDS,
+  USER_EXISTS,
+  USER_REGISTERED_SUCCESS,
+  REFRESH_TOKEN_SAVE_ERROR,
+  INVALID_CREDENTIALS,
+  USER_AUTHENTICATED,
+  SIGNIN_ERROR,
+  NO_REFRESH_TOKEN,
+  TOKEN_REFRESHED_SUCCESS,
+  REFRESH_ERROR,
+  REFRESH_TOKEN_EXPIRED,
+  INVALID_REFRESH_TOKEN,
+  PASSWORD_RESET_SUCCESS,
+  PASSWORD_RESET_ERROR,
+  INVALID_EXPIRED_TOKEN,
+  INITIATE_PASSWORD_RESET_ERROR,
+  INITIATE_PASSWORD_RESET_SUCCESS,
+  SIGNOUT_SUCCESS,
+  SIGNOUT_ERROR,
+  USER_NOT_FOUND,
+} = require("../constants/messages");
+
+const { FROM, PASSWORD_RESET_SUBJECT } = require("../constants/email");
+//------------------------------------------//
+
 class AuthController extends BaseController {
   constructor(model, refreshTokenModel, passwordResetTokenModel) {
     super(model);
@@ -19,9 +56,9 @@ class AuthController extends BaseController {
 
     // Check if all fields provided
     if (!email || !password || !username) {
-      return res.status(401).json({
+      return res.status(UNAUTHORIZED).json({
         success: false,
-        msg: "Missing email, password, or username",
+        msg: MISSING_FIELDS,
       });
     }
 
@@ -31,8 +68,8 @@ class AuthController extends BaseController {
 
       if (existingUser) {
         return res
-          .status(400)
-          .json({ success: false, msg: "User already exists" });
+          .status(BAD_REQUEST)
+          .json({ success: false, msg: USER_EXISTS });
       }
 
       // Hash password
@@ -69,9 +106,9 @@ class AuthController extends BaseController {
         maxAge: process.env.REFRESH_MAX_AGE * 24 * 60 * 60 * 1000,
       });
 
-      return res.status(201).json({
+      return res.status(CREATED).json({
         success: true,
-        msg: "User registered successfully",
+        msg: USER_REGISTERED_SUCCESS,
         data: {
           token,
           refreshToken,
@@ -83,8 +120,8 @@ class AuthController extends BaseController {
       });
     } catch (err) {
       return res
-        .status(500)
-        .json({ success: false, msg: "Error saving refresh token" });
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: REFRESH_TOKEN_SAVE_ERROR });
     }
   };
 
@@ -97,8 +134,8 @@ class AuthController extends BaseController {
 
       if (!user) {
         return res
-          .status(401)
-          .json({ success: false, msg: "Invalid credentials" });
+          .status(UNAUTHORIZED)
+          .json({ success: false, msg: INVALID_CREDENTIALS });
       }
 
       const compare = await bcrypt.compare(password, user.password);
@@ -106,8 +143,8 @@ class AuthController extends BaseController {
       // If passwords don't match
       if (!compare) {
         return res
-          .status(403)
-          .json({ success: false, msg: "Invalid credentials" });
+          .status(FORBIDDEN)
+          .json({ success: false, msg: INVALID_CREDENTIALS });
       }
 
       // If passwords match
@@ -133,9 +170,9 @@ class AuthController extends BaseController {
       user.lastLogin = new Date();
       await user.save();
 
-      return res.status(200).json({
+      return res.status(OK).json({
         success: true,
-        msg: "User authenticated successfully",
+        msg: USER_AUTHENTICATED,
         data: {
           token,
           refreshToken,
@@ -147,7 +184,9 @@ class AuthController extends BaseController {
       });
     } catch (err) {
       console.log(err);
-      return res.status(500).json({ success: false, msg: "Error logging in" });
+      return res
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: SIGNIN_ERROR });
     }
   };
 
@@ -158,8 +197,8 @@ class AuthController extends BaseController {
 
     if (!refreshToken) {
       return res
-        .status(401)
-        .json({ success: false, msg: "No refresh token provided" });
+        .status(UNAUTHORIZED)
+        .json({ success: false, msg: NO_REFRESH_TOKEN });
     }
 
     try {
@@ -178,14 +217,12 @@ class AuthController extends BaseController {
         httpOnly: true,
       });
 
-      return res
-        .status(200)
-        .json({ success: true, msg: "User signed out successfully" });
+      return res.status(OK).json({ success: true, msg: SIGNOUT_SUCCESS });
     } catch (err) {
       console.log("Error signing out user:", err);
       return res
-        .status(500)
-        .json({ success: false, msg: "Error signing out user" });
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: SIGNOUT_ERROR });
     }
   };
 
@@ -198,7 +235,9 @@ class AuthController extends BaseController {
       const user = await this.model.findOne({ where: { email } });
 
       if (!user) {
-        return res.status(404).json({ success: false, msg: "User not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ success: false, msg: USER_NOT_FOUND });
       }
 
       // Generate reset token
@@ -209,9 +248,9 @@ class AuthController extends BaseController {
 
       // Construct email message
       const message = {
-        from: '"Makan Where" <no-reply@makanwhere.com>',
+        from: FROM,
         to: user.email,
-        subject: "Password Reset",
+        subject: PASSWORD_RESET_SUBJECT,
         text: `Here is your password reset token: ${resetToken}`,
       };
 
@@ -234,14 +273,14 @@ class AuthController extends BaseController {
 
       return res.json({
         success: true,
-        msg: "Password reset initiated. Check your email for instructions.",
+        msg: INITIATE_PASSWORD_RESET_SUCCESS,
         data: resetTokenData,
       });
     } catch (err) {
       console.log("Error initiating password reset:", err);
       return res
-        .status(500)
-        .json({ success: false, msg: "Error initiating password reset" });
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: INITIATE_PASSWORD_RESET_ERROR });
     }
   };
 
@@ -265,8 +304,8 @@ class AuthController extends BaseController {
           !tokenData.isValid
         ) {
           return res
-            .status(400)
-            .json({ success: false, msg: "Invalid or expired reset token" });
+            .status(BAD_REQUEST)
+            .json({ success: false, msg: INVALID_EXPIRED_TOKEN });
         }
 
         // Find user in database
@@ -274,8 +313,8 @@ class AuthController extends BaseController {
 
         if (!user) {
           return res
-            .status(404)
-            .json({ success: false, msg: "User not found" });
+            .status(NOT_FOUND)
+            .json({ success: false, msg: USER_NOT_FOUND });
         }
 
         // Invalidate token
@@ -292,8 +331,8 @@ class AuthController extends BaseController {
 
         if (!user) {
           return res
-            .status(404)
-            .json({ success: false, msg: "User not found" });
+            .status(NOT_FOUND)
+            .json({ success: false, msg: USER_NOT_FOUND });
         }
       }
 
@@ -301,12 +340,12 @@ class AuthController extends BaseController {
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
       await user.update({ password: hashedPassword });
 
-      return res.json({ success: true, msg: "Password reset successfully" });
+      return res.json({ success: true, msg: PASSWORD_RESET_SUCCESS });
     } catch (err) {
       console.log("Error resetting password:", err);
       return res
-        .status(500)
-        .json({ success: false, msg: "Error resetting password" });
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: PASSWORD_RESET_ERROR });
     }
   };
 
@@ -319,8 +358,8 @@ class AuthController extends BaseController {
 
     if (!refreshToken) {
       return res
-        .status(401)
-        .json({ success: false, msg: "No refresh token provided" });
+        .status(UNAUTHORIZED)
+        .json({ success: false, msg: NO_REFRESH_TOKEN });
     }
 
     try {
@@ -335,8 +374,8 @@ class AuthController extends BaseController {
       // If refresh token not found or invalid
       if (!tokenEntry || tokenEntry.expiresAt < new Date()) {
         return res
-          .status(403)
-          .json({ success: false, msg: "Invalid refresh token" });
+          .status(FORBIDDEN)
+          .json({ success: false, msg: INVALID_REFRESH_TOKEN });
       }
 
       // Generate new JWT
@@ -371,9 +410,9 @@ class AuthController extends BaseController {
       });
 
       // Return new JWT
-      return res.status(201).json({
+      return res.status(CREATED).json({
         success: true,
-        msg: "Token refreshed successfully",
+        msg: TOKEN_REFRESHED_SUCCESS,
         data: {
           token: newToken,
           refreshToken: newRefreshToken,
@@ -387,17 +426,17 @@ class AuthController extends BaseController {
       // If refresh token has expired or is otherwise invalid
       if (err instanceof jwt.TokenExpiredError) {
         return res
-          .status(403)
-          .json({ success: false, msg: "Refresh token expired" });
+          .status(FORBIDDEN)
+          .json({ success: false, msg: REFRESH_TOKEN_EXPIRED });
       } else if (err instanceof jwt.JsonWebTokenError) {
         return res
-          .status(403)
-          .json({ success: false, msg: "Invalid refresh token" });
+          .status(FORBIDDEN)
+          .json({ success: false, msg: INVALID_REFRESH_TOKEN });
       }
 
       // Any other error
       console.log("Error refreshing token:", err);
-      throw new Error("Error refreshing token");
+      throw new Error(REFRESH_ERROR);
     }
   };
 
@@ -425,7 +464,7 @@ class AuthController extends BaseController {
       });
     } catch (err) {
       console.log("Error saving refresh token:", err);
-      throw new Error("Error saving refresh token");
+      throw new Error(REFRESH_TOKEN_SAVE_ERROR);
     }
   };
 }

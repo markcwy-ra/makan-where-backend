@@ -2,6 +2,11 @@
 const BaseController = require("./baseController");
 const { Op } = require("sequelize");
 
+//------------ IMPORT CONSTANTS ------------//
+const { OK, SERVER_ERROR } = require("../constants/statusCodes");
+const { GET_RESTAURANTS_IN_VIEWPORT_ERROR } = require("../constants/messages");
+//------------------------------------------//
+
 class MapController extends BaseController {
   constructor(model, restaurantModel) {
     super(model);
@@ -46,12 +51,12 @@ class MapController extends BaseController {
         ],
       });
 
-      return res.status(200).json({ success: true, restaurants });
+      return res.status(OK).json({ success: true, restaurants });
     } catch (err) {
       console.log("Error getting restaurants:", err);
-      return res.status(500).json({
+      return res.status(SERVER_ERROR).json({
         success: false,
-        msg: "An error occurred while fetching restaurants in viewport",
+        msg: GET_RESTAURANTS_IN_VIEWPORT_ERROR,
       });
     }
   };

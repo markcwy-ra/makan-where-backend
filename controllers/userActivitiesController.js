@@ -3,6 +3,18 @@ const { sequelize } = require("../db/models");
 const BaseController = require("./baseController");
 const { Op } = require("sequelize");
 
+//------------ IMPORT CONSTANTS ------------//
+const { BAD_REQUEST, NOT_FOUND } = require("../constants/statusCodes");
+const {
+  USER_ACTIVITIES_NOT_FOUND,
+  REVIEW_ACTIVITY_NO_LONGER_EXISTS,
+  USER_ACTIVITY_NO_LONGER_EXISTS,
+  MAKANLIST_RESTAURANT_ACTIVITY_NO_LONGER_EXISTS,
+  MAKANLIST_ACTIVITY_NO_LONGER_EXISTS,
+  RESTAURANT_ACTIVITY_NO_LONGER_EXISTS,
+} = require("../constants/messages");
+//------------------------------------------//
+
 class UserActivitiesController extends BaseController {
   constructor(model, userModel, restaurantModel, reviewModel, makanlistModel) {
     super(model);
@@ -49,8 +61,8 @@ class UserActivitiesController extends BaseController {
 
       if (userActivities.length === 0) {
         return res
-          .status(404)
-          .json({ error: true, msg: "No user activities found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_ACTIVITIES_NOT_FOUND });
       }
 
       // Fetch additional data based on activity type
@@ -106,7 +118,7 @@ class UserActivitiesController extends BaseController {
               if (!review) {
                 console.log(`No review found with id ${userActivity.targetId}`);
                 targetDetails = {
-                  error: `This activity refers to a review that no longer exists`,
+                  error: REVIEW_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -163,7 +175,7 @@ class UserActivitiesController extends BaseController {
                   `No makanlist found with id ${userActivity.targetId}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a makanlist that no longer exists`,
+                  error: MAKANLIST_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -193,7 +205,7 @@ class UserActivitiesController extends BaseController {
                   `No makanlist restaurant found with id ${userActivity.targetId}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a makanlist restaurant that no longer exists`,
+                  error: MAKANLIST_RESTAURANT_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -209,7 +221,7 @@ class UserActivitiesController extends BaseController {
                   `No makanlist found with id ${makanlistRestaurant.makanlist_id}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a makanlist that no longer exists`,
+                  error: MAKANLIST_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -224,7 +236,7 @@ class UserActivitiesController extends BaseController {
                   `No restaurant found with id ${makanlistRestaurant.restaurant_id}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a restaurant that no longer exists`,
+                  error: RESTAURANT_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -255,7 +267,7 @@ class UserActivitiesController extends BaseController {
                   `No restaurant found with id ${userActivity.targetId}`
                 );
                 targetDetails = {
-                  error: `This activity refers to a restaurant that no longer exists`,
+                  error: RESTAURANT_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -269,7 +281,7 @@ class UserActivitiesController extends BaseController {
               if (!user) {
                 console.log(`No user found with id ${activity.targetId}`);
                 targetDetails = {
-                  error: `This activity refers to a user that no longer exists`,
+                  error: USER_ACTIVITY_NO_LONGER_EXISTS,
                 };
                 break;
               }
@@ -291,7 +303,7 @@ class UserActivitiesController extends BaseController {
       return res.json(userActivitiesWithDetails);
     } catch (err) {
       console.log("Error fetching feed:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 }

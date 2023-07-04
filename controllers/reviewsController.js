@@ -3,6 +3,28 @@ const BaseController = require("./baseController");
 const { fn, col } = require("sequelize");
 const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
+//------------ IMPORT CONSTANTS ------------//
+const {
+  CREATED,
+  BAD_REQUEST,
+  NOT_FOUND,
+  CONFLICT,
+  SERVER_ERROR,
+} = require("../constants/statusCodes");
+
+const {
+  RESTAURANT_NOT_FOUND,
+  REVIEWS_NOT_FOUND,
+  USER_NOT_FOUND,
+  REVIEW_NOT_FOUND,
+  REVIEW_UPVOTED_SUCCESS,
+  USER_REVIEW_EXISTS,
+  REVIEW_DELETED_SUCCESS,
+  REVIEW_UPVOTE_REMOVED_SUCCESS,
+  USER_OR_REVIEW_NOT_FOUND,
+} = require("../constants/messages");
+//------------------------------------------//
+
 class ReviewsController extends BaseController {
   constructor(model, restaurantModel, userModel, userActivityModel) {
     super(model);
@@ -19,8 +41,8 @@ class ReviewsController extends BaseController {
       const restaurant = await this.restaurantModel.findByPk(restaurantId);
       if (!restaurant) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
 
       const reviews = await this.model.findAll({
@@ -37,13 +59,15 @@ class ReviewsController extends BaseController {
       });
 
       if (!reviews) {
-        return res.status(404).json({ error: true, msg: "Reviews not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEWS_NOT_FOUND });
       }
 
       return res.json({ reviews });
     } catch (err) {
       console.log("Error fetching reviews:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -57,7 +81,7 @@ class ReviewsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting reviews:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -68,7 +92,7 @@ class ReviewsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const reviews = await this.model.findAll({
@@ -85,13 +109,15 @@ class ReviewsController extends BaseController {
       });
 
       if (!reviews) {
-        return res.status(404).json({ error: true, msg: "Reviews not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEWS_NOT_FOUND });
       }
 
       return res.json({ reviews });
     } catch (err) {
       console.log("Error fetching reviews:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -105,7 +131,7 @@ class ReviewsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting reviews:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -116,7 +142,7 @@ class ReviewsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       let restaurant = await this.restaurantModel.findOne({
@@ -124,8 +150,8 @@ class ReviewsController extends BaseController {
       });
       if (!restaurant) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
 
       const review = await this.model.findOne({
@@ -142,13 +168,15 @@ class ReviewsController extends BaseController {
       });
 
       if (!review) {
-        return res.status(404).json({ error: true, msg: "Review not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEW_NOT_FOUND });
       }
 
       return res.json(review);
     } catch (err) {
       console.log("Error fetching review:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -161,14 +189,14 @@ class ReviewsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const restaurant = await this.restaurantModel.findByPk(restaurantId);
       if (!restaurant) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
 
       const existingReview = await this.model.findOne({
@@ -176,9 +204,9 @@ class ReviewsController extends BaseController {
       });
 
       if (existingReview) {
-        return res.status(409).json({
+        return res.status(CONFLICT).json({
           error: true,
-          msg: "User has already left a review for this restaurant",
+          msg: USER_REVIEW_EXISTS,
         });
       }
 
@@ -228,10 +256,10 @@ class ReviewsController extends BaseController {
         ],
       });
 
-      return res.status(201).json(reviewWithDetails);
+      return res.status(CREATED).json(reviewWithDetails);
     } catch (err) {
       console.log("Error creating review:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -244,7 +272,7 @@ class ReviewsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const existingReview = await this.model.findOne({
@@ -252,7 +280,9 @@ class ReviewsController extends BaseController {
       });
 
       if (!existingReview) {
-        return res.status(404).json({ error: true, msg: "Review not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEW_NOT_FOUND });
       }
 
       existingReview.rating = rating;
@@ -305,7 +335,7 @@ class ReviewsController extends BaseController {
       return res.json(updatedReview);
     } catch (err) {
       console.log("Error updating review:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -316,7 +346,7 @@ class ReviewsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const existingReview = await this.model.findOne({
@@ -333,7 +363,9 @@ class ReviewsController extends BaseController {
       });
 
       if (!existingReview) {
-        return res.status(404).json({ error: true, msg: "Review not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEW_NOT_FOUND });
       }
 
       // Get restaurantId
@@ -368,10 +400,10 @@ class ReviewsController extends BaseController {
         { where: { id: restaurantId } }
       );
 
-      return res.json({ success: true, msg: "Review deleted successfully" });
+      return res.json({ success: true, msg: REVIEW_DELETED_SUCCESS });
     } catch (err) {
       console.log("Error deleting review:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -402,15 +434,15 @@ class ReviewsController extends BaseController {
         // Calculate score
         await calculateAndUpdateScore(reviewId, "review");
 
-        return res.json({ success: true, msg: "Successfully upvoted review" });
+        return res.json({ success: true, msg: REVIEW_UPVOTED_SUCCESS });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "User or review not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_OR_REVIEW_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error upvoting review:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -441,16 +473,16 @@ class ReviewsController extends BaseController {
         await user.removeUpvotedReviews(review);
         return res.json({
           success: true,
-          msg: "Successfully removed review upvote",
+          msg: REVIEW_UPVOTE_REMOVED_SUCCESS,
         });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "User or review not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_OR_REVIEW_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error upvoting review:", err);
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -465,11 +497,13 @@ class ReviewsController extends BaseController {
         const upvotes = await review.getUpvotedBy();
         return res.json({ upvotes });
       } else {
-        return res.status(404).json({ error: true, msg: "Review not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEW_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error getting review upvotes:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -484,11 +518,13 @@ class ReviewsController extends BaseController {
         const count = await review.countUpvotedBy();
         return res.json({ count });
       } else {
-        return res.status(404).json({ error: true, msg: "Review not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEW_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error counting review upvotes:", err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 
@@ -512,7 +548,7 @@ class ReviewsController extends BaseController {
       return res.json({ upvotedReviews });
     } catch (err) {
       console.log("Error fetching user's upvoted reviews");
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -527,7 +563,7 @@ class ReviewsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting user's upvoted reviews");
-      return res.status(500).json({ error: true, msg: err });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err });
     }
   };
 
@@ -539,12 +575,14 @@ class ReviewsController extends BaseController {
         attributes: { exclude: ["password"] },
       });
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const review = await this.model.findByPk(reviewId);
       if (!review) {
-        return res.status(404).json({ error: true, msg: "Review not found" });
+        return res
+          .status(NOT_FOUND)
+          .json({ error: true, msg: REVIEW_NOT_FOUND });
       }
       const upvotedReviews = await user.getUpvotedReviews();
       const hasUpvoted = upvotedReviews.some(
@@ -559,7 +597,7 @@ class ReviewsController extends BaseController {
       });
     } catch (err) {
       console.log("Error checking upvote status for review:", err);
-      return res.status(500).json({ success: false, msg: err });
+      return res.status(SERVER_ERROR).json({ success: false, msg: err });
     }
   };
 

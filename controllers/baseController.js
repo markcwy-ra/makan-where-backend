@@ -1,3 +1,5 @@
+const { BAD_REQUEST } = require("../constants/statusCodes");
+
 class BaseController {
   constructor(model) {
     this.model = model;
@@ -10,7 +12,7 @@ class BaseController {
       return res.json(output);
     } catch (err) {
       console.log(err);
-      return res.status(400).json({ error: true, msg: err });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err });
     }
   };
 }

@@ -3,6 +3,33 @@ const BaseController = require("./baseController");
 const { Op } = require("sequelize");
 const { calculateAndUpdateScore } = require("../utils/scoreUtils");
 
+//------------ IMPORT CONSTANTS ------------//
+const {
+  BAD_REQUEST,
+  FORBIDDEN,
+  NOT_FOUND,
+  SERVER_ERROR,
+} = require("../constants/statusCodes");
+
+const {
+  RESTAURANT_MAKANLISTS_NOT_FOUND,
+  USER_NOT_FOUND,
+  RESTAURANT_NOT_FOUND,
+  MAKANLIST_NOT_FOUND,
+  MAKANLISTS_NOT_FOUND,
+  USER_OR_MAKANLIST_NOT_FOUND,
+  MAKANLIST_UPVOTE_REMOVED_SUCCESS,
+  MAKANLIST_UPVOTED_SUCCESS,
+  MAKANLIST_DELETED_SUCCESS,
+  MAKANLIST_UPDATED_SUCCESS,
+  MAKANLIST_TITLE_EXISTS,
+  MAKANLIST_CREATED_SUCCESS,
+  MAKANLIST_RESTAURANT_ALREADY_ADDED,
+  MAKANLIST_RESTAURANT_ADDED_SUCCESS,
+  MAKANLIST_RESTAURANT_REMOVED_SUCCESS,
+} = require("../constants/messages");
+//------------------------------------------//
+
 class MakanlistsController extends BaseController {
   constructor(model, restaurantModel, userModel, userActivityModel) {
     super(model);
@@ -28,7 +55,7 @@ class MakanlistsController extends BaseController {
       return res.json(makanlists);
     } catch (err) {
       console.log("Error fetching makanlists:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -52,16 +79,16 @@ class MakanlistsController extends BaseController {
       });
 
       if (!makanlists || makanlists.length === 0) {
-        return res.status(404).json({
+        return res.status(NOT_FOUND).json({
           error: true,
-          msg: "No makanlists found for this restaurant",
+          msg: RESTAURANT_MAKANLISTS_NOT_FOUND,
         });
       }
 
       return res.json(makanlists);
     } catch (err) {
       console.log("Error fetching makanlists for restaurant:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -72,7 +99,7 @@ class MakanlistsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const makanlists = await this.model.findAll({
@@ -90,7 +117,7 @@ class MakanlistsController extends BaseController {
       return res.json(makanlists);
     } catch (err) {
       console.log("Error fetching user's makanlists:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -104,7 +131,7 @@ class MakanlistsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting user's makanlists:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 
@@ -115,7 +142,7 @@ class MakanlistsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const makanlist = await this.model.findOne({
@@ -133,7 +160,7 @@ class MakanlistsController extends BaseController {
       return res.json(makanlist);
     } catch (err) {
       console.log("Error fetching makanlist:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 
@@ -146,7 +173,7 @@ class MakanlistsController extends BaseController {
         attributes: { exclude: ["password"] },
       });
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       // Find user's existing makanlists
@@ -158,9 +185,9 @@ class MakanlistsController extends BaseController {
       if (existingMakanlists) {
         for (let existingMakanlist of existingMakanlists) {
           if (existingMakanlist.title === title) {
-            return res.status(403).json({
+            return res.status(FORBIDDEN).json({
               error: true,
-              msg: "Makanlist with this title already exists",
+              msg: MAKANLIST_TITLE_EXISTS,
             });
           }
         }
@@ -190,13 +217,13 @@ class MakanlistsController extends BaseController {
 
       return res.json({
         success: true,
-        msg: "Makanlist created successfully",
+        msg: MAKANLIST_CREATED_SUCCESS,
         newMakanlist,
         user,
       });
     } catch (err) {
       console.log("Error creating makanlist:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -208,23 +235,23 @@ class MakanlistsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
       console.log("user:", user);
 
       const makanlist = await this.model.findByPk(makanlistId);
       if (!makanlist) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
       console.log("makanlist:", makanlist);
 
       const restaurant = await this.restaurantModel.findByPk(restaurantId);
       if (!restaurant) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
       console.log("restaurant:", restaurant);
 
@@ -234,8 +261,8 @@ class MakanlistsController extends BaseController {
       });
       if (restaurantInMakanlist.length > 0) {
         return res
-          .status(400)
-          .json({ error: true, msg: "Restaurant already added to makanlist" });
+          .status(BAD_REQUEST)
+          .json({ error: true, msg: MAKANLIST_RESTAURANT_ALREADY_ADDED });
       }
 
       await makanlist.addRestaurant(restaurant);
@@ -303,12 +330,12 @@ class MakanlistsController extends BaseController {
 
       return res.json({
         success: true,
-        msg: "Restaurant successfully added to makanlist",
+        msg: MAKANLIST_RESTAURANT_ADDED_SUCCESS,
         updatedMakanlist,
       });
     } catch (err) {
       console.log("Error adding restaurant to makanlist:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -320,14 +347,14 @@ class MakanlistsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const makanlist = await this.model.findByPk(makanlistId);
       if (!makanlist) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
       let preFlightList = {
         title,
@@ -372,12 +399,12 @@ class MakanlistsController extends BaseController {
 
       return res.json({
         success: true,
-        msg: "Makanlist successfully updated",
+        msg: MAKANLIST_UPDATED_SUCCESS,
         updatedMakanlist,
       });
     } catch (err) {
       console.log("Error updating makanlist:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -388,7 +415,7 @@ class MakanlistsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const makanlist = await this.model.findOne({
@@ -404,16 +431,16 @@ class MakanlistsController extends BaseController {
 
       if (!makanlist) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
 
       const makanlistRestaurant = makanlist.restaurants[0];
 
       if (!makanlistRestaurant) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Restaurant not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: RESTAURANT_NOT_FOUND });
       }
 
       // Log activity
@@ -450,13 +477,13 @@ class MakanlistsController extends BaseController {
 
       return res.json({
         success: true,
-        msg: "Restaurant successfully removed from makanlist",
+        msg: MAKANLIST_RESTAURANT_REMOVED_SUCCESS,
         makanlistRestaurant,
         updatedMakanlist,
       });
     } catch (err) {
       console.log("Error removing restaurant from makanlist:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -467,7 +494,7 @@ class MakanlistsController extends BaseController {
     try {
       const user = await this.userModel.findByPk(userId);
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const makanlist = await this.model.findOne({
@@ -477,8 +504,8 @@ class MakanlistsController extends BaseController {
 
       if (!makanlist) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
 
       // Log activity
@@ -507,10 +534,10 @@ class MakanlistsController extends BaseController {
       // Then remove makanlist
       await makanlist.destroy();
 
-      return res.json({ success: true, msg: "Makanlist deleted" });
+      return res.json({ success: true, msg: MAKANLIST_DELETED_SUCCESS });
     } catch (err) {
       console.log("Error deleting makanlist:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -543,16 +570,16 @@ class MakanlistsController extends BaseController {
 
         return res.json({
           success: true,
-          msg: "Successfully upvoted makanlist",
+          msg: MAKANLIST_UPVOTED_SUCCESS,
         });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "User or makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_OR_MAKANLIST_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error upvoting review:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -584,16 +611,16 @@ class MakanlistsController extends BaseController {
 
         return res.json({
           success: true,
-          msg: "Successfully removed makanlist upvote",
+          msg: MAKANLIST_UPVOTE_REMOVED_SUCCESS,
         });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "User or makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: USER_OR_MAKANLIST_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error removing makanlist upvote:", err);
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -611,12 +638,12 @@ class MakanlistsController extends BaseController {
         return res.json(upvotes);
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error getting makanlist upvotes:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 
@@ -632,12 +659,12 @@ class MakanlistsController extends BaseController {
         return res.json({ count });
       } else {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
     } catch (err) {
       console.log("Error counting makanlist upvotes:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 
@@ -664,7 +691,7 @@ class MakanlistsController extends BaseController {
       return res.json({ upvotedMakanlists });
     } catch (err) {
       console.log("Error fetching user's upvoted makanlists");
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -679,7 +706,7 @@ class MakanlistsController extends BaseController {
       return res.json({ count });
     } catch (err) {
       console.log("Error counting user's upvoted makanlists");
-      return res.status(500).json({ error: true, msg: err.message });
+      return res.status(SERVER_ERROR).json({ error: true, msg: err.message });
     }
   };
 
@@ -691,14 +718,14 @@ class MakanlistsController extends BaseController {
         attributes: { exclude: ["password"] },
       });
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const makanlist = await this.model.findByPk(makanlistId);
       if (!makanlist) {
         return res
-          .status(404)
-          .json({ error: true, msg: "Makanlist not found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLIST_NOT_FOUND });
       }
 
       const upvotedMakanlists = await user.getUpvotedMakanlists();
@@ -714,7 +741,9 @@ class MakanlistsController extends BaseController {
       });
     } catch (err) {
       console.log("Error checking upvote status for makanlists:", err);
-      return res.status(500).json({ success: false, msg: err.message });
+      return res
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: err.message });
     }
   };
 
@@ -727,7 +756,7 @@ class MakanlistsController extends BaseController {
         attributes: { exclude: ["password"] },
       });
       if (!user) {
-        return res.status(404).json({ error: true, msg: "User not found" });
+        return res.status(NOT_FOUND).json({ error: true, msg: USER_NOT_FOUND });
       }
 
       const upvotedMakanlists = await user.getUpvotedMakanlists({
@@ -751,7 +780,9 @@ class MakanlistsController extends BaseController {
       });
     } catch (err) {
       console.log("Error getting upvotes for user's makanlists:", err);
-      return res.status(500).json({ success: false, msg: err.message });
+      return res
+        .status(SERVER_ERROR)
+        .json({ success: false, msg: err.message });
     }
   };
 
@@ -783,14 +814,14 @@ class MakanlistsController extends BaseController {
 
       if (makanlists.length === 0) {
         return res
-          .status(404)
-          .json({ error: true, msg: "No makanlists found" });
+          .status(NOT_FOUND)
+          .json({ error: true, msg: MAKANLISTS_NOT_FOUND });
       }
 
       return res.json(makanlists);
     } catch (err) {
       console.log("Error fetching makanlists for search:", err);
-      return res.status(400).json({ error: true, msg: err.message });
+      return res.status(BAD_REQUEST).json({ error: true, msg: err.message });
     }
   };
 }
