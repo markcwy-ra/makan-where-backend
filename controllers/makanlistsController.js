@@ -228,6 +228,16 @@ class MakanlistsController extends BaseController {
       }
       console.log("restaurant:", restaurant);
 
+      // Check if restaurant already in makanlist
+      const restaurantInMakanlist = await makanlist.getRestaurants({
+        where: { id: restaurantId },
+      });
+      if (restaurantInMakanlist.length > 0) {
+        return res
+          .status(400)
+          .json({ error: true, msg: "Restaurant already added to makanlist" });
+      }
+
       await makanlist.addRestaurant(restaurant);
       console.log(
         `Restaurant id ${restaurantId} added to makanlist id ${makanlistId}`
