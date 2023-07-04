@@ -64,7 +64,7 @@ class UsersController extends BaseController {
 
       return res.status(CREATED).json({
         success: true,
-        msg: USER_DATA_RETRIEVED,
+        msg: USER_RETRIEVED_SUCCESS,
         data: {
           username: user.username,
           id: user.id,
