@@ -25,39 +25,51 @@ class RestaurantsController extends BaseController {
   // Get restaurants from search
   getRestaurants = async (req, res) => {
     const { searchTerm, priceLevel, lat, lng } = req.query;
-    try {
-      // API request
-      const apiUrl = new URL(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json`
-      );
+    const types = ["restaurant", "food", "cafe", "bakery", "bar"];
+    let allResults = [];
+    console.log("Types:", types);
 
-      // Set parameters
-      apiUrl.searchParams.set(`location`, `${lat}, ${lng}`);
-      // apiUrl.searchParams.set(`radius`, 5000);
-      apiUrl.searchParams.set(`type`, `restaurant|cafe|bakery|bar`);
-      apiUrl.searchParams.set(`keyword`, searchTerm);
-      apiUrl.searchParams.set(`rankby`, `distance`);
-      apiUrl.searchParams.set(`key`, process.env.GMAPS_API_KEY);
+    for (let type of types) {
+      console.log(`Processing type: ${type}`);
+      try {
+        // API request
+        const apiUrl = new URL(
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json`
+        );
 
-      // Add filters to request
-      if (priceLevel) {
-        apiUrl.searchParams.set(`maxprice`, priceLevel);
+        // Set parameters
+        apiUrl.searchParams.set(`location`, `${lat}, ${lng}`);
+        // apiUrl.searchParams.set(`radius`, 5000);
+        apiUrl.searchParams.set(`type`, type);
+        apiUrl.searchParams.set(`keyword`, searchTerm);
+        apiUrl.searchParams.set(`rankby`, `distance`);
+        apiUrl.searchParams.set(`key`, process.env.GMAPS_API_KEY);
+
+        // Add filters to request
+        if (priceLevel) {
+          apiUrl.searchParams.set(`maxprice`, priceLevel);
+        }
+
+        const response = await axios.get(apiUrl.href);
+        let results = response.data.results;
+        console.log(`Received ${results.length} results for type: ${type}`);
+        allResults = allResults.concat(results);
+      } catch (err) {
+        console.log(`Error retrieving ${type} places:`, err);
       }
+    }
 
-      const response = await axios.get(apiUrl.href);
-      let results = response.data.results;
-
-      return res.json({
-        success: true,
-        msg: "Successfully retrieved search results",
-        data: results,
-      });
-    } catch (err) {
-      console.log("Error retrieving restaurants:", err);
+    if (allResults.length === 0) {
       return res
         .status(500)
-        .json({ success: false, msg: "Error retrieving restaurants" });
+        .json({ success: false, msg: "Error retrieving places" });
     }
+
+    return res.json({
+      success: true,
+      msg: "Successfully retrieved search results",
+      data: allResults,
+    });
   };
 
   // Get restaurant details from API or add restaurant to db
