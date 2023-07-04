@@ -9,7 +9,7 @@ class UsersRouter {
 
   routes() {
     router.get("/", this.verifyToken, this.controller.getCurrentUser);
-    router.get("/:userId", this.controller.getUserProfile);
+    router.get("/:userId", this.verifyToken, this.controller.getUserProfile);
     router.put(
       "/:userId/update",
       this.verifyToken,
