@@ -45,10 +45,16 @@ const { FROM, PASSWORD_RESET_SUBJECT } = require("../constants/email");
 //------------------------------------------//
 
 class AuthController extends BaseController {
-  constructor(model, refreshTokenModel, passwordResetTokenModel) {
+  constructor(
+    model,
+    refreshTokenModel,
+    passwordResetTokenModel,
+    locationModel
+  ) {
     super(model);
     this.refreshTokenModel = refreshTokenModel;
     this.passwordResetTokenModel = passwordResetTokenModel;
+    this.locationModel = locationModel;
   }
   // Sign up new user
   signUp = async (req, res) => {
@@ -164,6 +170,10 @@ class AuthController extends BaseController {
     try {
       const user = await this.model.findOne({ where: { email } });
 
+      const location = await this.locationModel.findOne({
+        where: { id: user.locationId },
+      });
+
       if (!user) {
         return res
           .status(UNAUTHORIZED)
@@ -212,6 +222,8 @@ class AuthController extends BaseController {
           id: user.id,
           email: user.email,
           photoUrl: user.photoUrl,
+          locationId: user.locationId,
+          location,
         },
       });
     } catch (err) {

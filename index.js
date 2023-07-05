@@ -58,7 +58,7 @@ const {
 } = db;
 
 // Initialise controllers
-const usersController = new UsersController(user, refreshtoken);
+const usersController = new UsersController(user, refreshtoken, location);
 const authController = new AuthController(
   user,
   refreshtoken,
