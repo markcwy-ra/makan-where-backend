@@ -1,4 +1,4 @@
 module.exports = {
-  FROM: '"Makan Where" <no-reply@makanwhere.com>',
+  FROM: process.env.GMAIL_USER,
   PASSWORD_RESET_SUBJECT: "Password Reset",
 };
