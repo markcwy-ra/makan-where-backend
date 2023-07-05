@@ -22,9 +22,10 @@ const {
 //------------------------------------------//
 
 class UsersController extends BaseController {
-  constructor(model, refreshTokenModel) {
+  constructor(model, refreshTokenModel, locationModel) {
     super(model);
     this.refreshTokenModel = refreshTokenModel;
+    this.locationModel = locationModel;
   }
 
   // Get current user profile
@@ -35,6 +36,10 @@ class UsersController extends BaseController {
         where: { token: token },
       });
       const user = await this.model.findByPk(tokenId.userId);
+      const location = await this.locationModel.findOne({
+        where: { id: user.locationId },
+      });
+
       return res.status(CREATED).json({
         success: true,
         msg: USER_RETRIEVED_SUCCESS,
@@ -43,6 +48,8 @@ class UsersController extends BaseController {
           id: user.id,
           email: user.email,
           photoUrl: user.photoUrl,
+          locationId: user.locationId,
+          location,
         },
       });
     } catch (err) {
@@ -80,8 +87,17 @@ class UsersController extends BaseController {
   // Update user profile
   updateUserProfile = async (req, res) => {
     const { userId } = req.params;
-    const { username, email, currentPassword, newPassword, photoUrl } =
-      req.body;
+    const {
+      username,
+      email,
+      currentPassword,
+      newPassword,
+      photoUrl,
+      country,
+      countryCode,
+      latitude,
+      longitude,
+    } = req.body;
 
     try {
       // Get user from db
@@ -107,10 +123,23 @@ class UsersController extends BaseController {
         hashedPassword = await bcrypt.hash(newPassword, saltRounds);
       }
 
+      // Create new location or find existing one
+      const [location, created] = await this.locationModel.findOrCreate({
+        where: { name: countryCode, latitude, longitude },
+        defaults: {
+          name: countryCode,
+          city: country,
+          country: country,
+          latitude: latitude,
+          longitude: longitude,
+        },
+      });
+
       // Generate new user before update
       let preFlightUser = {
         username,
         email,
+        locationId: location.id,
       };
       // If there's a new password, save it
       if (hashedPassword) {
@@ -129,7 +158,7 @@ class UsersController extends BaseController {
       return res.json({
         success: true,
         msg: `User ${updatedUser.username} successfully updated profile`,
-        data: updatedUser,
+        data: { updatedUser, location },
       });
     } catch (err) {
       console.log("Error updating user profile:", err);
