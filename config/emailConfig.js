@@ -1,15 +1,16 @@
 const nodemailer = require("nodemailer");
 
 const createTransporter = async () => {
-  let testAccount = await nodemailer.createTestAccount();
+  // let testAccount = await nodemailer.createTestAccount();
 
   const transporter = nodemailer.createTransport({
-    host: process.env.NODEMAILER_HOST,
-    port: process.env.NODEMAILER_PORT,
-    secure: false,
+    service: "gmail",
+    // host: process.env.NODEMAILER_HOST,
+    // port: process.env.NODEMAILER_PORT,
+    // secure: false,
     auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
     },
   });
 

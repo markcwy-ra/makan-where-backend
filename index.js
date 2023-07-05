@@ -5,8 +5,13 @@ require("dotenv").config();
 const PORT = process.env.PORT || 8000;
 const app = express();
 
+const origin =
+  process.env.NODE_ENV === "production"
+    ? process.env.CORS_ORIGIN
+    : "http://localhost:3000";
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN,
+  origin,
   optionsSuccessStatus: 200,
 };
 
@@ -57,7 +62,8 @@ const usersController = new UsersController(user, refreshtoken);
 const authController = new AuthController(
   user,
   refreshtoken,
-  passwordresettoken
+  passwordresettoken,
+  location
 );
 const featuredActivitiesController = new FeaturedActivitiesController(
   featuredactivity,

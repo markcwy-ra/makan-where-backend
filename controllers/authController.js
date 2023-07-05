@@ -52,10 +52,27 @@ class AuthController extends BaseController {
   }
   // Sign up new user
   signUp = async (req, res) => {
-    const { email, password, username, photoUrl } = req.body;
+    const {
+      email,
+      password,
+      username,
+      photoUrl,
+      country,
+      countryCode,
+      latitude,
+      longitude,
+    } = req.body;
 
     // Check if all fields provided
-    if (!email || !password || !username) {
+    if (
+      !email ||
+      !password ||
+      !username ||
+      !country ||
+      !countryCode ||
+      latitude === null ||
+      longitude === null
+    ) {
       return res.status(UNAUTHORIZED).json({
         success: false,
         msg: MISSING_FIELDS,
@@ -72,6 +89,18 @@ class AuthController extends BaseController {
           .json({ success: false, msg: USER_EXISTS });
       }
 
+      // Create new location or find existing one
+      const [location, created] = await this.locationModel.findOrCreate({
+        where: { name: countryCode, latitude, longitude },
+        defaults: {
+          name: countryCode,
+          city: country,
+          country: country,
+          latitude: latitude,
+          longitude: longitude,
+        },
+      });
+
       // Hash password
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -81,6 +110,7 @@ class AuthController extends BaseController {
         password: hashedPassword,
         username,
         photoUrl,
+        locationId: location.id,
         lastLogin: new Date(),
       });
 
@@ -116,6 +146,8 @@ class AuthController extends BaseController {
           id: newUser.id,
           email: newUser.email,
           photoUrl: newUser.photoUrl,
+          locationId: newUser.locationId,
+          location,
         },
       });
     } catch (err) {
